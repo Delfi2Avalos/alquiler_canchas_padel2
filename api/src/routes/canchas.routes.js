@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { listarCanchasPorSucursal } from "../controllers/canchas.controller.js";
+
 const r = Router();
 
-r.get("/canchas/sucursal/:sedeId", listarCanchasPorSucursal);
+// GET /canchas/sucursal/:sedeId
+r.get("/sucursal/:sedeId", listarCanchasPorSucursal);
 
 export default r;

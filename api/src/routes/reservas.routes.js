@@ -4,8 +4,13 @@ import { crearReserva, disponibilidad, cambiarEstado } from "../controllers/rese
 
 const r = Router();
 
-r.get("/reservas/disponibilidad", disponibilidad);
-r.post("/reservas", requireAuth(['JUGADOR','ADMIN']), crearReserva);
-r.patch("/reservas/:id/estado", requireAuth(['ADMIN']), cambiarEstado);
+// GET /reservas/disponibilidad?canchaId=&fecha=YYYY-MM-DD   (pública)
+r.get("/disponibilidad", disponibilidad);
+
+// POST /reservas/   (JUGADOR o ADMIN crean)
+r.post("/", requireAuth(["JUGADOR", "ADMIN"]), crearReserva);
+
+// PATCH /reservas/:id/estado   (solo ADMIN)
+r.patch("/:id/estado", requireAuth(["ADMIN"]), cambiarEstado);
 
 export default r;

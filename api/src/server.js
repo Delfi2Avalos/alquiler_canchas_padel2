@@ -1,30 +1,27 @@
-import { pool } from "./config/db.js";
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
 import dotenv from "dotenv";
+import { pool } from "./config/db.js";
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(morgan("dev"));
-
-// CORS básico para Vite/localhost
 app.use(cors({ origin: true, credentials: true }));
 
-// Ruta de prueba
-app.get("/health", (_req, res) => res.json({ ok: true, service: "api-padel" }));
-
+// --- RUTAS PÚBLICAS BÁSICAS ---
 app.get("/", (_req, res) => {
-  res.send('API Pádel OK — probá /health o /sucursales');
+  res.send("API Pádel OK — probá /health o /sucursales");
 });
+
+app.get("/health", (_req, res) => res.json({ ok: true, service: "api-padel" }));
 
 app.get("/db-check", async (_req, res) => {
   try {
     const [rows] = await pool.query("SELECT 1 AS ok");
     res.json({ ok: true, rows });
   } catch (e) {
-    console.error(e);
     res.status(500).json({ ok: false, error: String(e) });
   }
 });
@@ -40,5 +37,31 @@ app.get("/sucursales", async (_req, res) => {
   }
 });
 
+// --- MANEJO DE 404 ---
+app.use((req, res) => {
+  res.status(404).json({ ok: false, msg: "Ruta no encontrada" });
+});
+
+// --- MANEJO CENTRALIZADO DE ERRORES ---
+app.use((err, _req, res, _next) => {
+  const dev = process.env.NODE_ENV !== "production";
+  res.status(500).json({
+    ok: false,
+    msg: "Error interno",
+    ...(dev ? { err: String(err) } : {})
+  });
+});
+
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`API running at http://localhost:${PORT}`));
+const server = app.listen(PORT, () =>
+  console.log(`API running at http://localhost:${PORT}`)
+);
+
+// Cierre prolijo
+process.on("SIGINT", async () => {
+  console.log("\nCerrando servidor...");
+  server.close(async () => {
+    try { await pool.end(); } catch {}
+    process.exit(0);
+  });
+});

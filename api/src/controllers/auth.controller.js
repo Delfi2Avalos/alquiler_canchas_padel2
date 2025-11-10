@@ -1,27 +1,120 @@
 import { pool } from "../config/db.js";
 import bcrypt from "bcryptjs";
 import { signToken } from "../middlewares/auth.js";
-import { ok, badRequest, serverError, asyncHandler } from "../utils/http.js";
+import { ok, created, badRequest, serverError } from "../utils/http.js";
 
-export const login = asyncHandler(async (req, res) => {
-  const { username, password } = req.body || {};
-  if (!username || !password) return badRequest(res, "Faltan credenciales");
+// helpers de validación simples
+const isEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || "").toLowerCase());
+const isDni = (s) => /^[0-9]{7,10}$/.test(String(s || ""));
+const hasMin = (s, n) => String(s || "").length >= n;
 
-  const user = String(username).trim();
-  const [rows] = await pool.query(
-    `SELECT id_usuario, role, username, hash_password, activo
-     FROM usuario
-     WHERE username = ? LIMIT 1`,
-    [user]
-  );
-  if (!rows.length) return badRequest(res, "Usuario o contraseña inválidos");
+/**
+ * LOGIN
+ */
+export const login = async (req, res) => {
+  try {
+    let { username, password } = req.body || {};
+    if (!username || !password) return badRequest(res, "Faltan credenciales");
 
-  const u = rows[0];
-  if (!u.activo) return badRequest(res, "Usuario inactivo");
+    // normalizar
+    username = String(username).trim().toLowerCase();
 
-  const okPass = await bcrypt.compare(password, u.hash_password);
-  if (!okPass) return badRequest(res, "Usuario o contraseña inválidos");
+    const [rows] = await pool.query(
+      `SELECT id_usuario, role, username, hash_password, activo
+       FROM usuario
+       WHERE username = ? LIMIT 1`,
+      [username]
+    );
 
-  const token = signToken({ id: u.id_usuario, role: u.role, username: u.username });
-  return ok(res, { token, user: { id: u.id_usuario, role: u.role, username: u.username } });
-});
+    if (!rows.length) return badRequest(res, "Usuario o contraseña inválidos");
+
+    const u = rows[0];
+    if (!u.activo) return badRequest(res, "Usuario inactivo");
+
+    const okPass = await bcrypt.compare(password, u.hash_password);
+    if (!okPass) return badRequest(res, "Usuario o contraseña inválidos");
+
+    const token = signToken({ id: u.id_usuario, role: u.role, username: u.username });
+
+    return ok(res, {
+      token,
+      user: { id: u.id_usuario, role: u.role, username: u.username },
+    });
+  } catch (err) {
+    return serverError(res, err);
+  }
+};
+
+/**
+ * REGISTRO (rol por defecto: JUGADOR)
+ */
+export const register = async (req, res) => {
+  try {
+    let { nombre, dni, username, email, telefono, password } = req.body || {};
+
+    // normalizar
+    nombre = String(nombre || "").trim();
+    dni = String(dni || "").trim();
+    username = String(username || "").trim().toLowerCase();
+    email = String(email || "").trim().toLowerCase();
+    telefono = telefono ? String(telefono).trim() : null;
+
+    // validaciones mínimas
+    if (!nombre || !dni || !username || !email || !password)
+      return badRequest(res, "Faltan datos requeridos");
+    if (!isDni(dni)) return badRequest(res, "DNI inválido (7 a 10 dígitos)");
+    if (!isEmail(email)) return badRequest(res, "Email inválido");
+    if (!hasMin(username, 3)) return badRequest(res, "Username muy corto (min 3)");
+    if (!hasMin(password, 6)) return badRequest(res, "Contraseña muy corta (min 6)");
+
+    // hash
+    const hash = await bcrypt.hash(password, 12);
+
+    // insertar
+    const [ins] = await pool.query(
+      `INSERT INTO usuario (role, nombre, dni, username, email, telefono, hash_password, activo)
+       VALUES ('JUGADOR', ?, ?, ?, ?, ?, ?, 1)`,
+      [nombre, dni, username, email, telefono, hash]
+    );
+
+    // opcional: devolver token ya logueado
+    const token = signToken({ id: ins.insertId, role: "JUGADOR", username });
+
+    return created(res, {
+      id_usuario: ins.insertId,
+      username,
+      email,
+      token, // si no querés auto-login, quitá esta línea
+    });
+  } catch (err) {
+    // manejo de duplicados: username/email/dni únicos
+    const msg = String(err?.message || "");
+    if (err?.code === "ER_DUP_ENTRY" || msg.includes("Duplicate entry")) {
+      return badRequest(res, "Usuario, DNI o email ya registrados");
+    }
+    return serverError(res, err);
+  }
+};
+
+/**
+ * PERFIL (requiere token) — útil para validar sesión en el frontend
+ * Nota: requiere montar requireAuth() en la ruta
+ */
+export const me = async (req, res) => {
+  try {
+    const uid = req.user?.id;
+    if (!uid) return badRequest(res, "Sin usuario");
+
+    const [rows] = await pool.query(
+      `SELECT id_usuario, role, username, email, nombre, dni, telefono, activo
+       FROM usuario
+       WHERE id_usuario = ? LIMIT 1`,
+      [uid]
+    );
+    if (!rows.length) return badRequest(res, "Usuario no encontrado");
+
+    return ok(res, rows[0]);
+  } catch (err) {
+    return serverError(res, err);
+  }
+};

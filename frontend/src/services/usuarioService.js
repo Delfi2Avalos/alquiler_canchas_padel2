@@ -1,21 +1,22 @@
-import api from "../api/api";
+import axios from "axios";
+import jwtDecode from "jwt-decode";
 
-export const getUsuarios = async () => {
-  const res = await api.get("/usuarios");
-  return res.data;
-};
+const api = axios.create({
+  baseURL: "https://localhost:7021/api", // Cambia según tu API
+});
 
-export const getUsuarioById = async (id) => {
-  const res = await api.get(`/usuarios/${id}`);
-  return res.data;
-};
+export async function loginUser(credentials) {
+  const response = await api.post("/auth/login", credentials);
+  const token = response.data.token;
+  localStorage.setItem("token", token);
+  return jwtDecode(token);
+}
 
-export const updateUsuario = async (id, payload) => {
-  const res = await api.put(`/usuarios/${id}`, payload);
-  return res.data;
-};
+export async function registerUser(data) {
+  return await api.post("/auth/register", data);
+}
 
-export const createUsuario = async (payload) => {
-  const res = await api.post("/usuarios", payload);
-  return res.data;
-};
+export function authLogout() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+}

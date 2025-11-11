@@ -1,3 +1,4 @@
+// frontend/src/pages/Register.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { register } from "../services/authService";
@@ -5,33 +6,46 @@ import "../styles/App.css";
 
 export default function Register() {
   const navigate = useNavigate();
-  const [nombre, setNombre] = useState("");
-  const [dni, setDni] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [email, setEmail] = useState("");
-  const [usuario, setUsuario] = useState("");
-  const [password, setPassword] = useState("");
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    // Aquí se enviaría la info a la API para registrar
-    alert(`Usuario ${nombre} registrado correctamente 🎉`);
-    navigate("/login");
-  };
+  const [form, setForm] = useState({
+    nombre: "",
+    dni: "",
+    username: "",
+    email: "",
+    telefono: "",
+    password: "",
+  });
 
-  // Validar DNI: solo números, máximo 8 caracteres
-  const handleDniChange = (e) => {
-    const value = e.target.value;
-    if (/^\d{0,8}$/.test(value)) {
-      setDni(value);
+  // Manejo de cambios de inputs
+  const onChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === "dni") {
+      // Solo números y máximo 8
+      if (/^\d{0,8}$/.test(value)) {
+        setForm((f) => ({ ...f, [name]: value }));
+      }
+    } else if (name === "telefono") {
+      // Solo números, cualquier longitud
+      if (/^\d*$/.test(value)) {
+        setForm((f) => ({ ...f, [name]: value }));
+      }
+    } else {
+      setForm((f) => ({ ...f, [name]: value }));
     }
   };
 
-  // Validar teléfono: solo números, máximo 15 caracteres
-  const handleTelefonoChange = (e) => {
-    const value = e.target.value;
-    if (/^\d{0,15}$/.test(value)) {
-      setTelefono(value);
+  // Envío del registro
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await register(form); // Llamada al backend
+      alert(`Usuario ${form.nombre} registrado correctamente 🎉`);
+      navigate("/login");
+    } catch (err) {
+      const msg = err?.response?.data?.msg || "Error al registrar";
+      alert(msg);
+      console.error(err);
     }
   };
 
@@ -45,54 +59,57 @@ export default function Register() {
 
         <form onSubmit={handleRegister} className="login-form">
           <input
+            name="nombre"
             type="text"
             placeholder="Nombre completo"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
+            value={form.nombre}
+            onChange={onChange}
             required
           />
-
           <input
+            name="dni"
             type="text"
-            placeholder="DNI"
-            value={dni}
-            onChange={handleDniChange}
+            placeholder="DNI (solo números)"
+            value={form.dni}
+            onChange={onChange}
             required
           />
-
           <input
-            type="tel"
-            placeholder="Teléfono"
-            value={telefono}
-            onChange={handleTelefonoChange}
-            required
-          />
-
-          <input
-            type="email"
-            placeholder="Correo electrónico"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-
-          <input
+            name="username"
             type="text"
             placeholder="Nombre de usuario"
-            value={usuario}
-            onChange={(e) => setUsuario(e.target.value)}
+            value={form.username}
+            onChange={onChange}
             required
           />
-
           <input
+            name="email"
+            type="email"
+            placeholder="Correo electrónico"
+            value={form.email}
+            onChange={onChange}
+            required
+          />
+          <input
+            name="telefono"
+            type="text"
+            placeholder="Teléfono"
+            value={form.telefono}
+            onChange={onChange}
+            required
+          />
+          <input
+            name="password"
             type="password"
             placeholder="Contraseña"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={form.password}
+            onChange={onChange}
             required
           />
 
-          <button type="submit" className="login-btn">Registrarse</button>
+          <button type="submit" className="login-btn">
+            Registrarse
+          </button>
         </form>
 
         <p className="register-text">

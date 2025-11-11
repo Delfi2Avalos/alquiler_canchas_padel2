@@ -4,18 +4,19 @@ import "../styles/App.css";
 
 function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState(""); // Cambié de email a username
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (email === "admin@test.com" && password === "1234") {
-      alert("Inicio de sesión exitoso ");
+    // Validación simulada; reemplazar con llamada a backend
+    if (username === "admin" && password === "1234") {
+      alert("Inicio de sesión exitoso");
       navigate("/home");
     } else {
-      setError("Correo o contraseña incorrectos");
+      setError("Nombre de usuario o contraseña incorrectos");
     }
   };
 
@@ -31,10 +32,10 @@ function Login() {
 
         <form onSubmit={handleSubmit} className="login-form">
           <input
-            type="email"
-            placeholder="Correo electrónico"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            placeholder="Nombre de usuario"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
           />
 

@@ -5,13 +5,33 @@ import "../styles/App.css";
 function Register() {
   const navigate = useNavigate();
   const [nombre, setNombre] = useState("");
+  const [dni, setDni] = useState("");
+  const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
+  const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
 
   const handleRegister = (e) => {
     e.preventDefault();
+    // Aquí se enviaría la info a la API para registrar
     alert(`Usuario ${nombre} registrado correctamente 🎉`);
-    navigate("/");
+    navigate("/login");
+  };
+
+  // Validar DNI: solo números, máximo 8 caracteres
+  const handleDniChange = (e) => {
+    const value = e.target.value;
+    if (/^\d{0,8}$/.test(value)) {
+      setDni(value);
+    }
+  };
+
+  // Validar teléfono: solo números, máximo 15 caracteres
+  const handleTelefonoChange = (e) => {
+    const value = e.target.value;
+    if (/^\d{0,15}$/.test(value)) {
+      setTelefono(value);
+    }
   };
 
   return (
@@ -32,10 +52,34 @@ function Register() {
           />
 
           <input
+            type="text"
+            placeholder="DNI"
+            value={dni}
+            onChange={handleDniChange}
+            required
+          />
+
+          <input
+            type="tel"
+            placeholder="Teléfono"
+            value={telefono}
+            onChange={handleTelefonoChange}
+            required
+          />
+
+          <input
             type="email"
             placeholder="Correo electrónico"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <input
+            type="text"
+            placeholder="Nombre de usuario"
+            value={usuario}
+            onChange={(e) => setUsuario(e.target.value)}
             required
           />
 
@@ -54,7 +98,7 @@ function Register() {
 
         <p className="register-text">
           ¿Ya tenés cuenta?{" "}
-          <span className="register-link" onClick={() => navigate("/")}>
+          <span className="register-link" onClick={() => navigate("/login")}>
             Iniciar sesión
           </span>
         </p>

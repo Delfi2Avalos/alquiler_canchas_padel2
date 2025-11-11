@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { register } from "../services/authService";
 import "../styles/App.css";
 
-function Register() {
+export default function Register() {
   const navigate = useNavigate();
   const [nombre, setNombre] = useState("");
   const [dni, setDni] = useState("");
@@ -11,7 +12,7 @@ function Register() {
   const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     // Aquí se enviaría la info a la API para registrar
     alert(`Usuario ${nombre} registrado correctamente 🎉`);
@@ -91,9 +92,7 @@ function Register() {
             required
           />
 
-          <button type="submit" className="login-btn">
-            Registrarse
-          </button>
+          <button type="submit" className="login-btn">Registrarse</button>
         </form>
 
         <p className="register-text">
@@ -106,5 +105,3 @@ function Register() {
     </div>
   );
 }
-
-export default Register;

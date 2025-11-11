@@ -1,22 +1,20 @@
-import axios from "axios";
+import api from "../api/api";
 import { jwtDecode } from "jwt-decode";
 
-const api = axios.create({
-  baseURL: "https://localhost:7021/api", // Cambia esto si tu API usa otro puerto
-});
-
-export async function loginUser(credentials) {
-  const response = await api.post("/auth/login", credentials);
-  const token = response.data.token;
-  localStorage.setItem("token", token);
-  return jwtDecode(token);
+export async function register(payload) {
+  // payload = { nombre, dni, username, email, telefono, password }
+  const { data } = await api.post("/auth/register", payload);
+  // El backend devuelve { id_usuario, username, email, token }
+  if (data?.token) localStorage.setItem("token", data.token);
+  return data;
 }
 
-export async function registerUser(data) {
-  return await api.post("/auth/register", data);
+export async function login({ username, password }) {
+  const { data } = await api.post("/auth/login", { username, password });
+  if (data?.token) localStorage.setItem("token", data.token);
+  return { ...data, decoded: jwtDecode(data.token) };
 }
 
-export function authLogout() {
+export function logout() {
   localStorage.removeItem("token");
-  localStorage.removeItem("user");
 }

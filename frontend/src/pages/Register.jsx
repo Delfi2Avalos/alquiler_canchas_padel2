@@ -1,35 +1,66 @@
-import React, { useState } from "react";
-import { registerUser } from "../services/authService";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "../styles/App.css";
 
-export default function Register() {
-  const [form, setForm] = useState({ nombre: "", email: "", password: "" });
+function Register() {
   const navigate = useNavigate();
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleRegister = (e) => {
     e.preventDefault();
-    try {
-      await registerUser(form);
-      alert("Usuario registrado correctamente");
-      navigate("/login");
-    } catch {
-      alert("Error al registrar usuario");
-    }
+    alert(`Usuario ${nombre} registrado correctamente 🎉`);
+    navigate("/");
   };
 
   return (
-    <div className="col-md-4 offset-md-4">
-      <div className="card shadow-sm">
-        <div className="card-body">
-          <h4 className="text-center mb-3">Registro</h4>
-          <form onSubmit={handleSubmit}>
-            <input className="form-control mb-2" placeholder="Nombre" onChange={(e) => setForm({ ...form, nombre: e.target.value })} />
-            <input className="form-control mb-2" type="email" placeholder="Email" onChange={(e) => setForm({ ...form, email: e.target.value })} />
-            <input className="form-control mb-3" type="password" placeholder="Contraseña" onChange={(e) => setForm({ ...form, password: e.target.value })} />
-            <button className="btn btn-success w-100" type="submit">Crear Cuenta</button>
-          </form>
-        </div>
+    <div className="page-container">
+      <h1 className="main-title">Registrate en el sistema de reservas</h1>
+
+      <div className="login-card">
+        <h2 className="login-title">Crear cuenta</h2>
+        <p className="login-subtitle">Completá los datos para registrarte</p>
+
+        <form onSubmit={handleRegister} className="login-form">
+          <input
+            type="text"
+            placeholder="Nombre completo"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            required
+          />
+
+          <input
+            type="email"
+            placeholder="Correo electrónico"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <button type="submit" className="login-btn">
+            Registrarse
+          </button>
+        </form>
+
+        <p className="register-text">
+          ¿Ya tenés cuenta?{" "}
+          <span className="register-link" onClick={() => navigate("/")}>
+            Iniciar sesión
+          </span>
+        </p>
       </div>
     </div>
   );
 }
+
+export default Register;

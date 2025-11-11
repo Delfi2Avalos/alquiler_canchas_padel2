@@ -1,36 +1,67 @@
-import React, { useContext, useState } from "react";
-import { AuthContext } from "../contexts/AuthContext";
-import { loginUser } from "../services/authService";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "../styles/App.css";
 
-export default function Login() {
-  const { login } = useContext(AuthContext);
+function Login() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      const user = await loginUser(form);
-      login(user);
-      navigate("/");
-    } catch {
-      alert("Credenciales incorrectas");
+
+    if (email === "admin@test.com" && password === "1234") {
+      alert("Inicio de sesión exitoso ");
+      navigate("/home");
+    } else {
+      setError("Correo o contraseña incorrectos");
     }
   };
 
   return (
-    <div className="col-md-4 offset-md-4">
-      <div className="card shadow-sm">
-        <div className="card-body">
-          <h4 className="text-center mb-3">Iniciar Sesión</h4>
-          <form onSubmit={handleSubmit}>
-            <input className="form-control mb-2" type="email" placeholder="Email" onChange={(e) => setForm({ ...form, email: e.target.value })} />
-            <input className="form-control mb-3" type="password" placeholder="Contraseña" onChange={(e) => setForm({ ...form, password: e.target.value })} />
-            <button className="btn btn-primary w-100" type="submit">Entrar</button>
-          </form>
-        </div>
+    <div className="page-container">
+      <h1 className="main-title">
+        Bienvenido al sistema de reservas de canchas de pádel
+      </h1>
+
+      <div className="login-card">
+        <h2 className="login-title">Iniciar sesión</h2>
+        <p className="login-subtitle">Accedé con tu cuenta para continuar</p>
+
+        <form onSubmit={handleSubmit} className="login-form">
+          <input
+            type="email"
+            placeholder="Correo electrónico"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          {error && <p className="error-text">{error}</p>}
+
+          <button type="submit" className="login-btn">
+            Iniciar sesión
+          </button>
+        </form>
+
+        <p className="register-text">
+          ¿No tenés cuenta?{" "}
+          <span className="register-link" onClick={() => navigate("/register")}>
+            Registrarse
+          </span>
+        </p>
       </div>
     </div>
   );
 }
+
+export default Login;

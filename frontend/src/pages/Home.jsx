@@ -1,12 +1,31 @@
-import React from "react";
+import { useNavigate } from "react-router-dom";
+import "../styles/App.css";
 
-export default function Home() {
+function Home() {
+  const navigate = useNavigate();
+
   return (
-    <div className="text-center mt-5">
-      <h1>🏓 Bienvenido al Sistema de Reservas de Pádel</h1>
-      <p className="lead text-muted">
-        Gestioná tus reservas, registrate y disfrutá de la mejor experiencia deportiva.
-      </p>
+    <div className="home-container">
+      {/* Capa semitransparente */}
+      <div className="overlay"></div>
+
+      {/* Contenido principal */}
+      <div className="home-content">
+        <h1 className="home-title">Sistema de reservas de canchas de Pádel</h1>
+        <p className="home-subtitle">
+          Cada partido empieza con una buena organización. Nosotros te ayudamos.
+        </p>
+
+        <button
+          className="start-btn"
+          onClick={() => navigate("/login")}
+        >
+          Comenzar
+        </button>
+      </div>
     </div>
   );
 }
+
+export default Home;
+

@@ -5,32 +5,33 @@ import "../styles/App.css";
 
 export default function Register() {
   const navigate = useNavigate();
-
-  const [form, setForm] = useState({
-    nombre: "",
-    dni: "",
-    username: "",
-    email: "",
-    telefono: "",
-    password: "",
-  });
-
-  const onChange = (e) => {
-    const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
-  };
+  const [nombre, setNombre] = useState("");
+  const [dni, setDni] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [email, setEmail] = useState("");
+  const [usuario, setUsuario] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    try {
-      const res = await register(form);
-      alert(`Usuario ${form.nombre} registrado correctamente `);
-      // si quieres ir directo al login:
-      navigate("/");
-    } catch (err) {
-      const msg = err?.response?.data?.msg || "Error al registrar";
-      alert(msg);
-      console.error(err);
+    // Aquí se enviaría la info a la API para registrar
+    alert(`Usuario ${nombre} registrado correctamente 🎉`);
+    navigate("/login");
+  };
+
+  // Validar DNI: solo números, máximo 8 caracteres
+  const handleDniChange = (e) => {
+    const value = e.target.value;
+    if (/^\d{0,8}$/.test(value)) {
+      setDni(value);
+    }
+  };
+
+  // Validar teléfono: solo números, máximo 15 caracteres
+  const handleTelefonoChange = (e) => {
+    const value = e.target.value;
+    if (/^\d{0,15}$/.test(value)) {
+      setTelefono(value);
     }
   };
 
@@ -43,19 +44,60 @@ export default function Register() {
         <p className="login-subtitle">Completá los datos para registrarte</p>
 
         <form onSubmit={handleRegister} className="login-form">
-          <input name="nombre" type="text" placeholder="Nombre completo" value={form.nombre} onChange={onChange} required />
-          <input name="dni" type="text" placeholder="DNI (solo números)" value={form.dni} onChange={onChange} required />
-          <input name="username" type="text" placeholder="Usuario" value={form.username} onChange={onChange} required />
-          <input name="email" type="email" placeholder="Correo electrónico" value={form.email} onChange={onChange} required />
-          <input name="telefono" type="text" placeholder="Teléfono (opcional)" value={form.telefono} onChange={onChange} />
-          <input name="password" type="password" placeholder="Contraseña" value={form.password} onChange={onChange} required />
+          <input
+            type="text"
+            placeholder="Nombre completo"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            required
+          />
+
+          <input
+            type="text"
+            placeholder="DNI"
+            value={dni}
+            onChange={handleDniChange}
+            required
+          />
+
+          <input
+            type="tel"
+            placeholder="Teléfono"
+            value={telefono}
+            onChange={handleTelefonoChange}
+            required
+          />
+
+          <input
+            type="email"
+            placeholder="Correo electrónico"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <input
+            type="text"
+            placeholder="Nombre de usuario"
+            value={usuario}
+            onChange={(e) => setUsuario(e.target.value)}
+            required
+          />
+
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
 
           <button type="submit" className="login-btn">Registrarse</button>
         </form>
 
         <p className="register-text">
           ¿Ya tenés cuenta?{" "}
-          <span className="register-link" onClick={() => navigate("/")}>
+          <span className="register-link" onClick={() => navigate("/login")}>
             Iniciar sesión
           </span>
         </p>

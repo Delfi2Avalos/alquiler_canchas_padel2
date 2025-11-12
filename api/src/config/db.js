@@ -11,6 +11,6 @@ export const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   dateStrings: true,
-  timezone: 'Z',           // UTC para consistencia
-  namedPlaceholders: true, // útil si luego usás :param
+  timezone: 'Z',
+  namedPlaceholders: true,
 });

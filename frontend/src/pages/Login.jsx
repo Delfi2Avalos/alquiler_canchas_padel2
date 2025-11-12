@@ -1,30 +1,32 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { login as loginService } from "../services/authService";
 import "../styles/App.css";
 
-function Login() {
+export default function Login() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState(""); // Cambié de email a username
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
-    // Validación simulada; reemplazar con llamada a backend
-    if (username === "admin" && password === "1234") {
-      alert("Inicio de sesión exitoso");
+    try {
+      const res = await loginService({ username, password });
+      console.log("Usuario logueado:", res);
       navigate("/home");
-    } else {
-      setError("Nombre de usuario o contraseña incorrectos");
+    } catch (err) {
+      const msg =
+        err?.response?.data?.msg || "Nombre de usuario o contraseña incorrectos";
+      setError(msg);
     }
   };
 
   return (
     <div className="page-container">
-      <h1 className="main-title">
-        Bienvenido al sistema de reservas de canchas de pádel
-      </h1>
+      <h1 className="main-title">Bienvenido al sistema de reservas de pádel</h1>
 
       <div className="login-card">
         <h2 className="login-title">Iniciar sesión</h2>
@@ -64,5 +66,3 @@ function Login() {
     </div>
   );
 }
-
-export default Login;

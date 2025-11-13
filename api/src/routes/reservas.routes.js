@@ -8,22 +8,13 @@ import {
 
 const r = Router();
 
-/**
- * GET /reservas/disponibilidad?canchaId=1&fecha=YYYY-MM-DD
- * Pública — permite ver horarios ocupados/libres
- */
+// GET /api/reservas/disponibilidad?canchaId=1&fecha=YYYY-MM-DD
 r.get("/disponibilidad", disponibilidad);
 
-/**
- * POST /reservas
- * Requiere estar logueado — Jugador o Admin crean una reserva
- */
+// POST /api/reservas
 r.post("/", requireAuth(["JUGADOR", "ADMIN"]), crearReserva);
 
-/**
- * PATCH /reservas/:id/estado
- * Solo ADMIN puede cambiar el estado de una reserva
- */
+// PATCH /api/reservas/:id/estado
 r.patch("/:id/estado", requireAuth(["ADMIN"]), cambiarEstado);
 
 export default r;

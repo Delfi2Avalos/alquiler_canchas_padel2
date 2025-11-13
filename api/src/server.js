@@ -14,24 +14,27 @@ import sucursalesRoutes from "./routes/sucursales.routes.js";
 dotenv.config();
 const app = express();
 
+// Middleware
 app.use(express.json());
 app.use(morgan("dev"));
-app.use(cors({ origin: ["http://localhost:5173"], credentials: true })); // <— opcional
+app.use(cors({ origin: ["http://localhost:5173"], credentials: true }));
 
+// Rutas
 app.get("/", (_req, res) => res.json({
   ok: true,
   service: "api-padel",
-  routes: ["/health","/sucursales","/canchas","/reservas","/pagos","/auth"]
+  routes: ["/api/health","/api/sucursales","/api/canchas","/api/reservas","/api/pagos","/api/auth"]
 }));
 
-app.use("/auth", authRoutes);
-app.use("/canchas", canchasRoutes);
-app.use("/health", healthRoutes);
-app.use("/pagos", pagosRoutes);
-app.use("/reservas", reservasRoutes);
-app.use("/sucursales", sucursalesRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/canchas", canchasRoutes);
+app.use("/api/health", healthRoutes);
+app.use("/api/pagos", pagosRoutes);
+app.use("/api/reservas", reservasRoutes);
+app.use("/api/sucursales", sucursalesRoutes);
 
-app.get("/db-check", async (_req, res) => {
+// Test DB
+app.get("/api/db-check", async (_req, res) => {
   try {
     const [rows] = await pool.query("SELECT 1 AS ok");
     res.json({ ok: true, rows });
@@ -40,8 +43,10 @@ app.get("/db-check", async (_req, res) => {
   }
 });
 
+// 404
 app.use((_req, res) => res.status(404).json({ ok: false, msg: "Ruta no encontrada" }));
 
+// Error handler
 app.use((err, _req, res, _next) => {
   const dev = process.env.NODE_ENV !== "production";
   res.status(500).json({ ok: false, msg: "Error interno", ...(dev ? { err: String(err) } : {}) });

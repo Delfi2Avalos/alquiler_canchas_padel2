@@ -1,6 +1,13 @@
 import mysql from "mysql2/promise";
 import dotenv from "dotenv";
+
 dotenv.config();
+
+if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_NAME) {
+  console.warn(
+    "[WARN] Faltan variables de entorno de la DB. Revisa DB_HOST, DB_USER, DB_NAME."
+  );
+}
 
 export const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -11,6 +18,6 @@ export const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   dateStrings: true,
-  timezone: 'Z',
+  timezone: "Z",
   namedPlaceholders: true,
 });

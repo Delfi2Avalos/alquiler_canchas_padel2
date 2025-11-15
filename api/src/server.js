@@ -14,17 +14,50 @@ import sucursalesRoutes from "./routes/sucursales.routes.js";
 dotenv.config();
 const app = express();
 
-// Middleware
+
+//  Middleware global
 app.use(express.json());
 app.use(morgan("dev"));
-app.use(cors({ origin: ["http://localhost:5173"], credentials: true }));
 
-// Rutas
-app.get("/", (_req, res) => res.json({
-  ok: true,
-  service: "api-padel",
-  routes: ["/api/health","/api/sucursales","/api/canchas","/api/reservas","/api/pagos","/api/auth"]
-}));
+// --- CORS configurable por .env ---
+// Ejemplo en .env:
+// CORS_ORIGINS=http://localhost:5173,http://TU_IP:5173,https://tudominio.com
+const rawOrigins = process.env.CORS_ORIGINS || "http://localhost:5173";
+const allowedOrigins = rawOrigins.split(",").map((o) => o.trim());
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Permitir herramientas tipo Postman (sin origin)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.warn("CORS bloqueado para origen:", origin);
+      return callback(new Error("Origen no permitido por CORS: " + origin));
+    },
+    credentials: true,
+  })
+);
+
+
+//  Rutas
+app.get("/", (_req, res) =>
+  res.json({
+    ok: true,
+    service: "api-padel",
+    routes: [
+      "/api/health",
+      "/api/sucursales",
+      "/api/canchas",
+      "/api/reservas",
+      "/api/pagos",
+      "/api/auth",
+    ],
+  })
+);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/canchas", canchasRoutes);
@@ -33,7 +66,8 @@ app.use("/api/pagos", pagosRoutes);
 app.use("/api/reservas", reservasRoutes);
 app.use("/api/sucursales", sucursalesRoutes);
 
-// Test DB
+
+//  Test DB
 app.get("/api/db-check", async (_req, res) => {
   try {
     const [rows] = await pool.query("SELECT 1 AS ok");
@@ -43,30 +77,57 @@ app.get("/api/db-check", async (_req, res) => {
   }
 });
 
-// 404
-app.use((_req, res) => res.status(404).json({ ok: false, msg: "Ruta no encontrada" }));
 
-// Error handler
+//  404
+app.use((_req, res) =>
+  res.status(404).json({ ok: false, msg: "Ruta no encontrada" })
+);
+
+
+//  Manejador de errores
 app.use((err, _req, res, _next) => {
   const dev = process.env.NODE_ENV !== "production";
-  res.status(500).json({ ok: false, msg: "Error interno", ...(dev ? { err: String(err) } : {}) });
+  console.error("Error:", err);
+  res.status(500).json({
+    ok: false,
+    msg: "Error interno",
+    ...(dev ? { err: String(err) } : {}),
+  });
 });
 
+
+//  Inicio del servidor
 const PORT = process.env.PORT || 3001;
-const server = app.listen(PORT, () => {
-  console.log(`API running at http://localhost:${PORT}`);
-  pool.query("SELECT 1").then(() => console.log("DB ✅ pool OK")).catch(e => console.error("DB ❌", e.message));
+
+// IMPORTANTE: "0.0.0.0" para aceptar conexiones desde otras PCs por IP
+const server = app.listen(PORT, "0.0.0.0", () => {
+  console.log(`API running on port ${PORT}`);
+  console.log("CORS_ORIGINS:", allowedOrigins);
+
+  pool
+    .query("SELECT 1")
+    .then(() => console.log("DB ✅ pool OK"))
+    .catch((e) => console.error("DB ❌", e.message));
 });
 
-// Cierre prolijo
+
+//  Cierre prolijo
 const shutdown = async (signal) => {
   console.log(`\nRecibido ${signal}. Cerrando servidor...`);
   server.close(async () => {
-    try { await pool.end(); } catch {}
+    try {
+      await pool.end();
+    } catch {}
     process.exit(0);
   });
 };
-process.on("SIGINT",  () => shutdown("SIGINT"));
+
+process.on("SIGINT", () => shutdown("SIGINT"));
 process.on("SIGTERM", () => shutdown("SIGTERM"));
-process.on("unhandledRejection", (r) => console.error("unhandledRejection:", r));
-process.on("uncaughtException",  (e) => { console.error("uncaughtException:", e); process.exit(1); });
+process.on("unhandledRejection", (r) =>
+  console.error("unhandledRejection:", r)
+);
+process.on("uncaughtException", (e) => {
+  console.error("uncaughtException:", e);
+  process.exit(1);
+});

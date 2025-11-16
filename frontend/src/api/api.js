@@ -1,9 +1,9 @@
 import axios from "axios";
 
 // URL base de la API
-// La idea es SIEMPRE usar VITE_API_URL en el .env del front
-// Ejemplo: VITE_API_URL=http://192.168.1.39:3001
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+// Siempre usamos VITE_API_URL desde el .env del front.
+// Ejemplo: VITE_API_URL=http://192.168.1.39:3001/api
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
 const api = axios.create({
   baseURL: API_URL,

@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login as loginService } from "../services/authService";
+import { AuthContext } from "../context/AuthContext";
 import "../styles/App.css";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login: authLogin } = useContext(AuthContext);
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -14,12 +17,24 @@ export default function Login() {
     setError("");
 
     try {
+      // loginService debería devolver algo como:
+      // { token, user: { id, role, username, sucursal } }
       const res = await loginService({ username, password });
       console.log("Usuario logueado:", res);
+
+      if (res?.user) {
+        // Guardamos el usuario en el contexto (y en localStorage dentro del AuthContext)
+        authLogin(res.user);
+      }
+
+      // Por ahora mandamos siempre a /home
+      // Más adelante podemos hacer:
+      // if (res.user.role === "SUPERADMIN") navigate("/superadmin/dashboard") ...
       navigate("/home");
     } catch (err) {
       const msg =
-        err?.response?.data?.msg || "Nombre de usuario o contraseña incorrectos";
+        err?.response?.data?.msg ||
+        "Nombre de usuario o contraseña incorrectos";
       setError(msg);
     }
   };

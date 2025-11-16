@@ -6,19 +6,33 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
+  // Cargar usuario guardado al iniciar la app
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser));
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        localStorage.removeItem("user");
+      }
+    }
   }, []);
 
+  // Login: guardamos el usuario en estado y en localStorage
   const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData || null);
+    if (userData) {
+      localStorage.setItem("user", JSON.stringify(userData));
+    } else {
+      localStorage.removeItem("user");
+    }
   };
 
+  // Logout: limpiamos token/usuario
   const logout = () => {
-    authLogout();
+    authLogout(); // acá probablemente sacás el token del localStorage
     setUser(null);
+    localStorage.removeItem("user");
   };
 
   return (

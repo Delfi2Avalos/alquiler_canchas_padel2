@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
 
   // Logout: limpiamos token/usuario
   const logout = () => {
-    authLogout(); // acá probablemente sacás el token del localStorage
+    authLogout();
     setUser(null);
     localStorage.removeItem("user");
   };

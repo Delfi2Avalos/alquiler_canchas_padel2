@@ -9,15 +9,24 @@ if (!process.env.JWT_SECRET) {
 export const signToken = (payload) =>
   jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "8h" });
 
+/**
+ * requireAuth(rolesOpcionales)
+ * - Si roles está vacío → permite cualquier usuario autenticado
+ * - Si roles tiene valores → solo deja pasar si req.user.role está incluido
+ *
+ * Además deja disponible en req.user:
+ * - id
+ * - role (JUGADOR / ADMIN / SUPERADMIN)
+ * - username
+ * - sucursal (id_sucursal o null)
+ */
 export const requireAuth =
   (roles = []) =>
   (req, res, next) => {
     const hdr = req.headers.authorization || "";
     const token = hdr.startsWith("Bearer ") ? hdr.slice(7) : null;
     if (!token) {
-      return res
-        .status(401)
-        .json({ ok: false, msg: "Token requerido" });
+      return res.status(401).json({ ok: false, msg: "Token requerido" });
     }
 
     try {
@@ -34,8 +43,6 @@ export const requireAuth =
       req.user = data;
       next();
     } catch (e) {
-      return res
-        .status(401)
-        .json({ ok: false, msg: "Token inválido" });
+      return res.status(401).json({ ok: false, msg: "Token inválido" });
     }
   };

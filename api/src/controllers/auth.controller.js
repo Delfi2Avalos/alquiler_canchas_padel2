@@ -10,6 +10,7 @@ const hasMin = (s, n) => String(s || "").length >= n;
 
 /**
  * LOGIN
+ * POST /api/auth/login
  */
 export const login = async (req, res) => {
   try {
@@ -19,9 +20,10 @@ export const login = async (req, res) => {
     username = String(username).trim().toLowerCase();
 
     const [rows] = await pool.query(
-      `SELECT id_usuario, rol, username, hash_password, activo
+      `SELECT id_usuario, rol, username, hash_password, activo, id_sucursal
        FROM usuario
-       WHERE username = ? LIMIT 1`,
+       WHERE username = ? 
+       LIMIT 1`,
       [username]
     );
 
@@ -33,12 +35,26 @@ export const login = async (req, res) => {
     const okPass = await bcrypt.compare(password, u.hash_password);
     if (!okPass) return badRequest(res, "Usuario o contraseña inválidos");
 
-    // Mapear BD.rol -> JWT.role
-    const token = signToken({ id: u.id_usuario, role: u.rol, username: u.username });
+    // Payload del JWT:
+    // - id: id del usuario
+    // - role: JUGADOR / ADMIN / SUPERADMIN
+    // - username
+    // - sucursal: id_sucursal (null para jugadores)
+    const token = signToken({
+      id: u.id_usuario,
+      role: u.rol,
+      username: u.username,
+      sucursal: u.id_sucursal ?? null,
+    });
 
     return ok(res, {
       token,
-      user: { id: u.id_usuario, role: u.rol, username: u.username },
+      user: {
+        id: u.id_usuario,
+        role: u.rol,
+        username: u.username,
+        sucursal: u.id_sucursal ?? null,
+      },
     });
   } catch (err) {
     return serverError(res, err);
@@ -47,6 +63,7 @@ export const login = async (req, res) => {
 
 /**
  * REGISTRO (rol por defecto: JUGADOR)
+ * POST /api/auth/register
  */
 export const register = async (req, res) => {
   try {
@@ -73,8 +90,13 @@ export const register = async (req, res) => {
       [nombre, dni, username, email, telefono, hash]
     );
 
-    // Importante: firmar con role (no rol)
-    const token = signToken({ id: ins.insertId, role: "JUGADOR", username });
+    // Jugador no tiene sucursal
+    const token = signToken({
+      id: ins.insertId,
+      role: "JUGADOR",
+      username,
+      sucursal: null,
+    });
 
     return created(res, {
       id_usuario: ins.insertId,
@@ -93,6 +115,7 @@ export const register = async (req, res) => {
 
 /**
  * PERFIL (requiere token)
+ * GET /api/auth/me
  */
 export const me = async (req, res) => {
   try {
@@ -100,14 +123,27 @@ export const me = async (req, res) => {
     if (!uid) return badRequest(res, "Sin usuario");
 
     const [rows] = await pool.query(
-      `SELECT id_usuario, rol, username, email, nombre, dni, telefono, activo
+      `SELECT id_usuario, rol, username, email, nombre, dni, telefono, activo, id_sucursal
        FROM usuario
-       WHERE id_usuario = ? LIMIT 1`,
+       WHERE id_usuario = ?
+       LIMIT 1`,
       [uid]
     );
     if (!rows.length) return badRequest(res, "Usuario no encontrado");
 
-    return ok(res, rows[0]);
+    const u = rows[0];
+
+    return ok(res, {
+      id: u.id_usuario,
+      rol: u.rol,
+      username: u.username,
+      email: u.email,
+      nombre: u.nombre,
+      dni: u.dni,
+      telefono: u.telefono,
+      activo: u.activo,
+      sucursal: u.id_sucursal ?? null,
+    });
   } catch (err) {
     return serverError(res, err);
   }

@@ -10,6 +10,8 @@ import healthRoutes from "./routes/health.routes.js";
 import pagosRoutes from "./routes/pagos.routes.js";
 import reservasRoutes from "./routes/reservas.routes.js";
 import sucursalesRoutes from "./routes/sucursales.routes.js";
+import superAdminRoutes from "./routes/superadmin.routes.js";
+import adminsRoutes from "./routes/admins.routes.js";
 
 dotenv.config();
 const app = express();
@@ -65,6 +67,8 @@ app.use("/api/health", healthRoutes);
 app.use("/api/pagos", pagosRoutes);
 app.use("/api/reservas", reservasRoutes);
 app.use("/api/sucursales", sucursalesRoutes);
+app.use("/api/superadmin", superAdminRoutes);
+app.use("/api/admins", adminsRoutes);
 
 
 //  Test DB

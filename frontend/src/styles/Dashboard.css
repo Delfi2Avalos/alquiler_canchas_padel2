@@ -1,0 +1,332 @@
+/* ===== DASHBOARD GENERAL (SUPERADMIN / ADMIN) ===== */
+
+.dashboard-container {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  background-image: url("/img/padel.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding-top: 80px; /* espacio para el navbar fijo */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  font-family: "Poppins", sans-serif;
+  color: #fff;
+}
+
+.dashboard-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(7, 59, 58, 0.75),
+    rgba(0, 0, 0, 0.85)
+  );
+  z-index: 0;
+}
+
+.dashboard-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1100px;
+  padding: 30px 20px 50px;
+}
+
+/* CABECERA */
+
+.dashboard-header {
+  margin-bottom: 25px;
+}
+
+.dashboard-title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.dashboard-subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+/* GRID DE TARJETAS */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 992px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* TARJETAS */
+
+.dashboard-card {
+  background: rgba(255, 255, 255, 0.95);
+  color: #073b3a;
+  border-radius: 18px;
+  padding: 18px 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dashboard-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  background: rgba(7, 59, 58, 0.1);
+}
+
+.dashboard-card-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.dashboard-card-text {
+  font-size: 0.9rem;
+  color: #315554;
+}
+
+/* NÚMEROS GRANDES */
+
+.dashboard-card-info {
+  margin-top: 5px;
+  margin-bottom: 8px;
+}
+
+.dashboard-card-number {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.dashboard-card-label {
+  font-size: 0.8rem;
+  color: #607d7c;
+}
+
+/* BOTÓN EN LA TARJETA */
+
+.dashboard-card-button {
+  margin-top: auto;
+  align-self: flex-start;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, #00c853, #00bfa6);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 200, 83, 0.4);
+  transition: 0.2s ease;
+}
+
+.dashboard-card-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 200, 83, 0.55);
+}
+
+/* SECCIÓN INFERIOR (TABLAS / ESTADÍSTICAS) */
+
+.dashboard-section {
+  margin-top: 30px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 18px;
+  padding: 18px 16px;
+  color: #073b3a;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+
+.dashboard-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+/* Tabla simple */
+
+.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.dashboard-table th,
+.dashboard-table td {
+  padding: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.dashboard-table th {
+  text-align: left;
+  background-color: #f5f5f5;
+  color: #073b3a;
+  font-weight: 600;
+}
+
+.dashboard-table tr:last-child td {
+  border-bottom: none;
+}
+
+
+/* ============================== */
+/*   MODALES SUPERADMIN / ADMIN   */
+/*   Estilo A - Fondo blur        */
+/* ============================== */
+
+/* Fondo oscuro con blur */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+/* Contenedor del modal */
+.modal-container {
+  background: #ffffff;
+  width: 420px;
+  max-width: 90%;
+  padding: 30px 28px;
+  border-radius: 18px;
+  box-shadow: 0px 10px 28px rgba(0, 0, 0, 0.25);
+  animation: modalFadeIn 0.25s ease-out;
+}
+
+/* Animación */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Título del modal */
+.modal-title {
+  margin: 0 0 15px 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+}
+
+/* Formulario del modal */
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Inputs */
+.modal-form input,
+.modal-form select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #cfcfcf;
+  font-size: 15px;
+  background: #f8f8f8;
+  transition: border-color 0.2s ease;
+}
+
+.modal-form input:focus,
+.modal-form select:focus {
+  border-color: #0099ff;
+  outline: none;
+  background: #ffffff;
+}
+
+/* Etiquetas */
+.modal-form label {
+  margin-top: 10px;
+  font-weight: 600;
+  color: #333;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 18px;
+}
+
+/* Botón cancelar */
+.modal-cancel {
+  background: #c4c4c4;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.modal-cancel:hover {
+  background: #a9a9a9;
+}
+
+/* Botones de editar / eliminar en tabla */
+.dashboard-btn-edit,
+.dashboard-btn-delete {
+  border: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-right: 5px;
+  font-size: 1.1rem;
+  transition: 0.2s ease-in-out;
+}
+
+.dashboard-btn-edit {
+  background: #007bff;
+  color: white;
+}
+
+.dashboard-btn-edit:hover {
+  background: #0066d6;
+  transform: translateY(-2px);
+}
+
+.dashboard-btn-delete {
+  background: #ff4d4d;
+  color: white;
+}
+
+.dashboard-btn-delete:hover {
+  background: #e04444;
+  transform: translateY(-2px);
+}

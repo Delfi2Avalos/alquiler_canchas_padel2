@@ -5,10 +5,12 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
+
 import { useContext } from "react";
 
-import Home from "./pages/Home";      // landing inicial
-import Menu from "./pages/Menu";      // menú interno después del login
+// Páginas principales
+import Home from "./pages/Home";
+import Menu from "./pages/Menu";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Reservas from "./pages/Reservas";
@@ -27,7 +29,10 @@ import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 import SuperAdminSucursales from "./pages/superadmin/SuperAdminSucursales";
 import SuperAdminReservas from "./pages/superadmin/SuperAdminReservas";
 
-// Rutas que solo necesitan usuario logueado
+// 👉 NUEVO: Panel de Administradores
+import SuperAdminAdmins from "./pages/superadmin/SuperAdminAdmins";
+
+// ----------- PROTECCIÓN GENERAL (NECESITA LOGIN) -----------
 function RequireAuth({ children }) {
   const { user } = useContext(AuthContext);
   const location = useLocation();
@@ -39,7 +44,7 @@ function RequireAuth({ children }) {
   return children;
 }
 
-//  Rutas restringidas por rol
+// ----------- PROTECCIÓN POR ROLES -----------
 function RequireRole({ roles, children }) {
   const { user } = useContext(AuthContext);
   const location = useLocation();
@@ -65,7 +70,6 @@ function RequireRole({ roles, children }) {
 function AppRoutes() {
   const { user } = useContext(AuthContext);
 
-  // Función para decidir a dónde va cada tipo de usuario
   const getRedirectPathForUser = () => {
     if (!user) return "/login";
 
@@ -73,15 +77,15 @@ function AppRoutes() {
 
     if (role === "SUPERADMIN") return "/superadmin/dashboard";
     if (role === "ADMIN") return "/admin/dashboard";
-    return "/home"; // jugador u otro
+    return "/home"; // jugador
   };
 
   return (
     <Routes>
-      {/* Landing inicial */}
+      {/* L A N D I N G */}
       <Route path="/" element={<Home />} />
 
-      {/* Menú principal logueado */}
+      {/* MENÚ DEL JUGADOR */}
       <Route
         path="/home"
         element={
@@ -91,7 +95,7 @@ function AppRoutes() {
         }
       />
 
-      {/* Reservas (usuario jugador) */}
+      {/* RESERVAS (jugador) */}
       <Route
         path="/reservas"
         element={
@@ -101,7 +105,7 @@ function AppRoutes() {
         }
       />
 
-      {/* ADMIN */}
+      {/* -------- ADMIN -------- */}
       <Route
         path="/admin/dashboard"
         element={
@@ -129,7 +133,7 @@ function AppRoutes() {
         }
       />
 
-      {/* SUPERADMIN */}
+      {/* -------- SUPERADMIN -------- */}
       <Route
         path="/superadmin/dashboard"
         element={
@@ -157,19 +161,25 @@ function AppRoutes() {
         }
       />
 
-      {/* LOGIN: redirección POR ROL si ya está logueado */}
+      {/* 👉 NUEVO PANEL DE ADMINISTRADORES */}
       <Route
-        path="/login"
+        path="/superadmin/admins"
         element={
-          user ? (
-            <Navigate to={getRedirectPathForUser()} replace />
-          ) : (
-            <Login />
-          )
+          <RequireRole roles={["SUPERADMIN"]}>
+            <SuperAdminAdmins />
+          </RequireRole>
         }
       />
 
-      {/* REGISTER: si ya está logueado, también lo mando según su rol */}
+      {/* LOGIN */}
+      <Route
+        path="/login"
+        element={
+          user ? <Navigate to={getRedirectPathForUser()} replace /> : <Login />
+        }
+      />
+
+      {/* REGISTER */}
       <Route
         path="/register"
         element={
@@ -181,7 +191,7 @@ function AppRoutes() {
         }
       />
 
-      {/* Rutas inexistentes */}
+      {/* RUTAS INEXISTENTES */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
@@ -198,3 +208,4 @@ function App() {
 }
 
 export default App;
+

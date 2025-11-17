@@ -25,12 +25,21 @@ export default function Login() {
       if (res?.user) {
         // Guardamos el usuario en el contexto (y en localStorage dentro del AuthContext)
         authLogin(res.user);
+
+        // 🔹 Redirección según rol
+        if (res.user.role === "SUPERADMIN") {
+          return navigate("/superadmin/dashboard");
+        }
+        if (res.user.role === "ADMIN") {
+          return navigate("/admin/dashboard");
+        }
+
+        // Jugador u otro rol → home normal
+        return navigate("/home");
       }
 
-      // Por ahora mandamos siempre a /home
-      // Más adelante podemos hacer:
-      // if (res.user.role === "SUPERADMIN") navigate("/superadmin/dashboard") ...
-      navigate("/home");
+      // Si por algún motivo no vino user en la respuesta:
+      setError("Respuesta inválida del servidor");
     } catch (err) {
       const msg =
         err?.response?.data?.msg ||

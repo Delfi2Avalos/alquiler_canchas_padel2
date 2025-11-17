@@ -21,6 +21,7 @@ export default function Login() {
       // { token, user: { id, role, username, sucursal } }
       const res = await loginService({ username, password });
       console.log("Usuario logueado:", res);
+        console.log("ROL QUE VIENE DEL BACK:", res?.user?.role); 
 
       if (res?.user) {
         // Guardamos el usuario en el contexto (y en localStorage dentro del AuthContext)

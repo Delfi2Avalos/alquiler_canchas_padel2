@@ -5,7 +5,7 @@ import { AuthContext } from "../context/AuthContext";
 import "../styles/App.css";
 
 export default function Login() {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // si querés, después lo podemos sacar
   const { login: authLogin } = useContext(AuthContext);
 
   const [username, setUsername] = useState("");
@@ -17,29 +17,20 @@ export default function Login() {
     setError("");
 
     try {
-      // loginService debería devolver algo como:
-      // { token, user: { id, role, username, sucursal } }
       const res = await loginService({ username, password });
-      console.log("Usuario logueado:", res);
-        console.log("ROL QUE VIENE DEL BACK:", res?.user?.role); 
+
+      console.log("Usuario logueado (respuesta cruda):", res);
+      console.log("ROL QUE VIENE DEL BACK:", res?.user?.role);
 
       if (res?.user) {
-        // Guardamos el usuario en el contexto (y en localStorage dentro del AuthContext)
+        // El AuthContext ya normaliza el rol a MAYÚSCULAS
         authLogin(res.user);
 
-        // 🔹 Redirección según rol
-        if (res.user.role === "SUPERADMIN") {
-          return navigate("/superadmin/dashboard");
-        }
-        if (res.user.role === "ADMIN") {
-          return navigate("/admin/dashboard");
-        }
-
-        // Jugador u otro rol → home normal
-        return navigate("/home");
+        // 🔹 IMPORTANTE: no navegamos manualmente.
+        // El redirect por rol lo hace la ruta /login en App.jsx
+        return;
       }
 
-      // Si por algún motivo no vino user en la respuesta:
       setError("Respuesta inválida del servidor");
     } catch (err) {
       const msg =

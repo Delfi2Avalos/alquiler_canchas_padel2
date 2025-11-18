@@ -1,54 +1,405 @@
 import { useEffect, useState } from "react";
-import api from "../../api";
+import "../../styles/Dashboard.css";
 
 export default function AdminCanchas() {
+  const baseUrl = import.meta.env.VITE_API_URL;
+
   const [canchas, setCanchas] = useState([]);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  // Modal
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  const emptyForm = {
+    nombre: "",
+    cubierta: 0,
+    iluminacion: 1,
+    piso: "CESPED",
+    paredes: "ALAMBRADO",
+    observaciones: "",
+  };
+
+  const [form, setForm] = useState(emptyForm);
+  const [editId, setEditId] = useState(null);
+
+  // ===============================
+  //   CARGAR CANCHAS
+  // ===============================
+  const loadCanchas = async () => {
+    try {
+      const res = await fetch(`${baseUrl}/api/canchas`, {
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      if (Array.isArray(data)) setCanchas(data);
+    } catch (err) {
+      console.error("Error cargando canchas:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await api.get("/canchas/mi");
-        setCanchas(res.data?.data || res.data || []);
-      } catch (err) {
-        const msg = err?.response?.data?.msg || "Error al cargar canchas";
-        setError(msg);
-      }
-    };
-    load();
+    loadCanchas();
   }, []);
 
-  return (
-    <div className="page-container">
-      <h1>Canchas de mi sucursal</h1>
-      {error && <p className="error-text">{error}</p>}
+  // ===============================
+  //   CREAR CANCHA
+  // ===============================
+  const handleCreate = async (e) => {
+    e.preventDefault();
 
-      {canchas.length === 0 ? (
-        <p>No hay canchas registradas.</p>
-      ) : (
-        <table className="table table-striped">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Nombre</th>
-              <th>Techada</th>
-              <th>Iluminación</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {canchas.map((c) => (
-              <tr key={c.id_cancha}>
-                <td>{c.id_cancha}</td>
-                <td>{c.nombre}</td>
-                <td>{c.cubierta ? "Sí" : "No"}</td>
-                <td>{c.iluminacion ? "Sí" : "No"}</td>
-                <td>{c.estado}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    try {
+      const res = await fetch(`${baseUrl}/api/canchas`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+      alert(data.msg || "Cancha creada");
+
+      if (data.ok || data.id_cancha) {
+        setShowCreateModal(false);
+        setForm(emptyForm);
+        loadCanchas();
+      }
+    } catch (err) {
+      console.error("Error creando cancha:", err);
+    }
+  };
+
+  // ===============================
+  //   EDITAR CANCHA
+  // ===============================
+  const openEditModal = (c) => {
+    setEditId(c.id_cancha);
+    setForm({
+      nombre: c.nombre,
+      cubierta: c.cubierta,
+      iluminacion: c.iluminacion,
+      piso: c.piso,
+      paredes: c.paredes,
+      observaciones: c.observaciones || "",
+    });
+    setShowEditModal(true);
+  };
+
+  const handleEdit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch(`${baseUrl}/api/canchas/${editId}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+      alert(data.msg || "Cancha actualizada");
+
+      if (data.ok !== false) {
+        setShowEditModal(false);
+        setForm(emptyForm);
+        setEditId(null);
+        loadCanchas();
+      }
+    } catch (err) {
+      console.error("Error editando cancha:", err);
+    }
+  };
+
+  // ===============================
+  //   ELIMINAR CANCHA
+  // ===============================
+  const deleteCancha = async (id) => {
+    if (!confirm("¿Eliminar esta cancha?")) return;
+
+    try {
+      const res = await fetch(`${baseUrl}/api/canchas/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      const data = await res.json();
+      alert(data.msg || "Cancha eliminada");
+
+      if (data.ok !== false) loadCanchas();
+    } catch (err) {
+      console.error("Error eliminando cancha:", err);
+    }
+  };
+
+  return (
+    <div className="dashboard-container">
+      <div className="dashboard-overlay" />
+
+      <main className="dashboard-content">
+        <header className="dashboard-header">
+          <h1 className="dashboard-title">Canchas</h1>
+          <p className="dashboard-subtitle">
+            Administrá las canchas de tu sucursal.
+          </p>
+
+          <button
+            className="dashboard-card-button"
+            onClick={() => setShowCreateModal(true)}
+          >
+            ➕ Crear cancha
+          </button>
+        </header>
+
+        {/* LISTADO */}
+        <section className="dashboard-section">
+          <h2 className="dashboard-section-title">Listado de canchas</h2>
+
+          {loading ? (
+            <p>Cargando canchas...</p>
+          ) : (
+            <table className="dashboard-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Cubierta</th>
+                  <th>Iluminación</th>
+                  <th>Piso</th>
+                  <th>Paredes</th>
+                  <th>Obs.</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {canchas.map((c) => (
+                  <tr key={c.id_cancha}>
+                    <td>{c.nombre}</td>
+                    <td>{c.cubierta ? "Sí" : "No"}</td>
+                    <td>{c.iluminacion ? "Sí" : "No"}</td>
+                    <td>{c.piso}</td>
+                    <td>{c.paredes}</td>
+                    <td>{c.observaciones || "-"}</td>
+
+                    <td>
+                      <button
+                        className="dashboard-btn-edit"
+                        onClick={() => openEditModal(c)}
+                      >
+                        ✏️
+                      </button>
+
+                      <button
+                        className="dashboard-btn-delete"
+                        onClick={() => deleteCancha(c.id_cancha)}
+                      >
+                        🗑️
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      </main>
+
+      {/* ======================
+          MODAL CREAR
+      ====================== */}
+      {showCreateModal && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <h2 className="modal-title">Crear cancha</h2>
+
+            <form className="modal-form" onSubmit={handleCreate}>
+              <input
+                type="text"
+                placeholder="Nombre"
+                value={form.nombre}
+                onChange={(e) =>
+                  setForm({ ...form, nombre: e.target.value })
+                }
+                required
+              />
+
+              <label>Cubierta</label>
+              <select
+                value={form.cubierta}
+                onChange={(e) =>
+                  setForm({ ...form, cubierta: Number(e.target.value) })
+                }
+              >
+                <option value={0}>No</option>
+                <option value={1}>Sí</option>
+              </select>
+
+              <label>Iluminación</label>
+              <select
+                value={form.iluminacion}
+                onChange={(e) =>
+                  setForm({ ...form, iluminacion: Number(e.target.value) })
+                }
+              >
+                <option value={1}>Sí</option>
+                <option value={0}>No</option>
+              </select>
+
+              <label>Piso</label>
+              <select
+                value={form.piso}
+                onChange={(e) =>
+                  setForm({ ...form, piso: e.target.value })
+                }
+              >
+                <option value="CESPED">Césped</option>
+                <option value="CEMENTO">Cemento</option>
+                <option value="MIXTO">Mixto</option>
+              </select>
+
+              <label>Paredes</label>
+              <select
+                value={form.paredes}
+                onChange={(e) =>
+                  setForm({ ...form, paredes: e.target.value })
+                }
+              >
+                <option value="ALAMBRADO">Alambrado</option>
+                <option value="VIDRIO">Vidrio</option>
+                <option value="MIXTAS">Mixtas</option>
+              </select>
+
+              <textarea
+                placeholder="Observaciones"
+                value={form.observaciones}
+                onChange={(e) =>
+                  setForm({ ...form, observaciones: e.target.value })
+                }
+                rows={3}
+                style={{ padding: "10px", borderRadius: "10px" }}
+              />
+
+              <div className="modal-actions">
+                <button type="submit" className="dashboard-card-button">
+                  Crear
+                </button>
+
+                <button
+                  type="button"
+                  className="modal-cancel"
+                  onClick={() => {
+                    setShowCreateModal(false);
+                    setForm(emptyForm);
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================
+          MODAL EDITAR
+      ====================== */}
+      {showEditModal && (
+        <div className="modal-overlay">
+          <div className="modal-container">
+            <h2 className="modal-title">Editar cancha</h2>
+
+            <form className="modal-form" onSubmit={handleEdit}>
+              <input
+                type="text"
+                placeholder="Nombre"
+                value={form.nombre}
+                onChange={(e) =>
+                  setForm({ ...form, nombre: e.target.value })
+                }
+                required
+              />
+
+              <label>Cubierta</label>
+              <select
+                value={form.cubierta}
+                onChange={(e) =>
+                  setForm({ ...form, cubierta: Number(e.target.value) })
+                }
+              >
+                <option value={0}>No</option>
+                <option value={1}>Sí</option>
+              </select>
+
+              <label>Iluminación</label>
+              <select
+                value={form.iluminacion}
+                onChange={(e) =>
+                  setForm({ ...form, iluminacion: Number(e.target.value) })
+                }
+              >
+                <option value={1}>Sí</option>
+                <option value={0}>No</option>
+              </select>
+
+              <label>Piso</label>
+              <select
+                value={form.piso}
+                onChange={(e) =>
+                  setForm({ ...form, piso: e.target.value })
+                }
+              >
+                <option value="CESPED">Césped</option>
+                <option value="CEMENTO">Cemento</option>
+                <option value="MIXTO">Mixto</option>
+              </select>
+
+              <label>Paredes</label>
+              <select
+                value={form.paredes}
+                onChange={(e) =>
+                  setForm({ ...form, paredes: e.target.value })
+                }
+              >
+                <option value="ALAMBRADO">Alambrado</	option>
+                <option value="VIDRIO">Vidrio</option>
+                <option value="MIXTAS">Mixtas</option>
+              </select>
+
+              <textarea
+                placeholder="Observaciones"
+                value={form.observaciones}
+                onChange={(e) =>
+                  setForm({ ...form, observaciones: e.target.value })
+                }
+                rows={3}
+                style={{ padding: "10px", borderRadius: "10px" }}
+              />
+
+              <div className="modal-actions">
+                <button type="submit" className="dashboard-card-button">
+                  Guardar cambios
+                </button>
+
+                <button
+                  type="button"
+                  className="modal-cancel"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setForm(emptyForm);
+                    setEditId(null);
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
 }
+

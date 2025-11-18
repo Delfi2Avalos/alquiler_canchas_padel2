@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "../styles/Dashboard.css";
+import "../../styles/Dashboard.css";
 
 export default function SuperAdminReservas() {
   const baseUrl = import.meta.env.VITE_API_URL;

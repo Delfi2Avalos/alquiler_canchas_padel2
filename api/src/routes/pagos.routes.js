@@ -3,14 +3,15 @@ import { requireAuth } from "../middlewares/auth.js";
 import {
   crearPago,
   cambiarEstadoPago,
-  listarPagos, // opcional si querés listar pagos desde el panel admin
+  listarPagosSucursal,   // ADMIN
+  listarPagosGlobal      // SUPERADMIN
 } from "../controllers/pagos.controller.js";
 
 const r = Router();
 
 /**
  * POST /pagos
- * Jugador o Admin pueden cargar el comprobante de pago (por seña o total)
+ * Jugador o Admin pueden cargar el comprobante de pago
  */
 r.post("/", requireAuth(["JUGADOR", "ADMIN"]), crearPago);
 
@@ -21,9 +22,15 @@ r.post("/", requireAuth(["JUGADOR", "ADMIN"]), crearPago);
 r.patch("/:id/estado", requireAuth(["ADMIN"]), cambiarEstadoPago);
 
 /**
- * GET /pagos (opcional)
- * Solo ADMIN — permite ver todos los pagos registrados
+ * GET /pagos/sucursal
+ * ADMIN ― ve solo pagos de SU sucursal
  */
-// r.get("/", requireAuth(["ADMIN"]), listarPagos);
+r.get("/sucursal", requireAuth(["ADMIN"]), listarPagosSucursal);
+
+/**
+ * GET /pagos/admin
+ * SUPERADMIN ― ve todos los pagos de todas las sucursales
+ */
+r.get("/admin", requireAuth(["SUPERADMIN"]), listarPagosGlobal);
 
 export default r;

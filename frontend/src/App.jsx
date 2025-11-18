@@ -5,10 +5,8 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-
 import { useContext } from "react";
 
-// Páginas principales
 import Home from "./pages/Home";
 import Menu from "./pages/Menu";
 import Login from "./pages/Login";
@@ -23,16 +21,17 @@ import { AuthProvider, AuthContext } from "./context/AuthContext";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminReservas from "./pages/admin/AdminReservas";
 import AdminCanchas from "./pages/admin/AdminCanchas";
+import AdminPagos from "./pages/admin/AdminPagos";   // ⬅️ NUEVO
 
 // SUPERADMIN
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 import SuperAdminSucursales from "./pages/superadmin/SuperAdminSucursales";
 import SuperAdminReservas from "./pages/superadmin/SuperAdminReservas";
+import SuperAdminPagos from "./pages/superadmin/SuperAdminPagos"; // ⬅️ NUEVO
 
-// 👉 NUEVO: Panel de Administradores
-import SuperAdminAdmins from "./pages/superadmin/SuperAdminAdmins";
-
-// ----------- PROTECCIÓN GENERAL (NECESITA LOGIN) -----------
+// -------------------------------
+//   USUARIO LOGUEADO
+// -------------------------------
 function RequireAuth({ children }) {
   const { user } = useContext(AuthContext);
   const location = useLocation();
@@ -44,7 +43,9 @@ function RequireAuth({ children }) {
   return children;
 }
 
-// ----------- PROTECCIÓN POR ROLES -----------
+// -------------------------------
+//   RESTRINGIR POR ROL
+// -------------------------------
 function RequireRole({ roles, children }) {
   const { user } = useContext(AuthContext);
   const location = useLocation();
@@ -53,17 +54,13 @@ function RequireRole({ roles, children }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  console.log("RequireRole -> user del contexto:", user);
-
   const userRole = (user.role || "").toUpperCase();
   const allowed = roles.map((r) => r.toUpperCase());
 
   if (!allowed.includes(userRole)) {
-    console.log("RequireRole -> acceso denegado, redirijo a /home");
     return <Navigate to="/home" replace />;
   }
 
-  console.log("RequireRole -> acceso permitido");
   return children;
 }
 
@@ -77,15 +74,16 @@ function AppRoutes() {
 
     if (role === "SUPERADMIN") return "/superadmin/dashboard";
     if (role === "ADMIN") return "/admin/dashboard";
+
     return "/home"; // jugador
   };
 
   return (
     <Routes>
-      {/* L A N D I N G */}
+      {/* Landing */}
       <Route path="/" element={<Home />} />
 
-      {/* MENÚ DEL JUGADOR */}
+      {/* Usuario logueado (jugador) */}
       <Route
         path="/home"
         element={
@@ -95,7 +93,6 @@ function AppRoutes() {
         }
       />
 
-      {/* RESERVAS (jugador) */}
       <Route
         path="/reservas"
         element={
@@ -105,7 +102,9 @@ function AppRoutes() {
         }
       />
 
-      {/* -------- ADMIN -------- */}
+      {/* ---------------------- */}
+      {/*       ADMIN           */}
+      {/* ---------------------- */}
       <Route
         path="/admin/dashboard"
         element={
@@ -133,7 +132,19 @@ function AppRoutes() {
         }
       />
 
-      {/* -------- SUPERADMIN -------- */}
+      {/* NUEVA RUTA → PAGOS */}
+      <Route
+        path="/admin/pagos"
+        element={
+          <RequireRole roles={["ADMIN"]}>
+            <AdminPagos />
+          </RequireRole>
+        }
+      />
+
+      {/* ---------------------- */}
+      {/*     SUPERADMIN        */}
+      {/* ---------------------- */}
       <Route
         path="/superadmin/dashboard"
         element={
@@ -161,17 +172,19 @@ function AppRoutes() {
         }
       />
 
-      {/* 👉 NUEVO PANEL DE ADMINISTRADORES */}
+      {/* NUEVA RUTA → PAGOS GLOBAL */}
       <Route
-        path="/superadmin/admins"
+        path="/superadmin/pagos"
         element={
           <RequireRole roles={["SUPERADMIN"]}>
-            <SuperAdminAdmins />
+            <SuperAdminPagos />
           </RequireRole>
         }
       />
 
-      {/* LOGIN */}
+      {/* ---------------------- */}
+      {/*       LOGIN/REG        */}
+      {/* ---------------------- */}
       <Route
         path="/login"
         element={
@@ -179,7 +192,6 @@ function AppRoutes() {
         }
       />
 
-      {/* REGISTER */}
       <Route
         path="/register"
         element={
@@ -191,7 +203,7 @@ function AppRoutes() {
         }
       />
 
-      {/* RUTAS INEXISTENTES */}
+      {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
@@ -208,4 +220,3 @@ function App() {
 }
 
 export default App;
-

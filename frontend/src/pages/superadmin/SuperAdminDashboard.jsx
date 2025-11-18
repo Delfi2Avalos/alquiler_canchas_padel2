@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/Dashboard.css";
+import "../../styles/Dashboard.css";
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
+  const baseUrl = import.meta.env.VITE_API_URL;
 
   const [stats, setStats] = useState({
     sucursalesActivas: 0,
     adminsActivos: 0,
     reservasHoy: 0,
-    ocupacion: 0,
   });
 
   const [loading, setLoading] = useState(true);
@@ -17,29 +17,67 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL; // ej: http://localhost:3001
-        const res = await fetch(`${baseUrl}/api/superadmin/stats`);
-        const data = await res.json();
+        // Fecha de hoy en formato YYYY-MM-DD para el filtro de reservas
+        const hoy = new Date().toISOString().slice(0, 10);
 
-        if (!data.ok) throw new Error("Error al obtener estadísticas");
+        const [sucRes, reservasRes, adminsRes] = await Promise.all([
+          // Sucursales públicas
+          fetch(`${baseUrl}/api/sucursales`, {
+            credentials: "include",
+          }),
+          // Reservas globales, filtradas por fecha de hoy
+          fetch(`${baseUrl}/api/reservas/admin?fecha=${hoy}`, {
+            credentials: "include",
+          }),
+          // Lista de administradores
+          fetch(`${baseUrl}/api/admins`, {
+            credentials: "include",
+          }),
+        ]);
+
+        const sucData = await sucRes.json();
+        const reservasData = await reservasRes.json();
+        const adminsData = await adminsRes.json();
+
+        // Contar sucursales
+        const getCountGeneric = (data) => {
+          if (Array.isArray(data)) return data.length;
+          if (Array.isArray(data.data)) return data.data.length;
+          if (typeof data.total === "number") return data.total;
+          if (typeof data.cantidad === "number") return data.cantidad;
+          return 0;
+        };
+
+        const sucursalesActivas = getCountGeneric(sucData);
+
+        // Contar admins (según lo que devuelve tu /api/admins)
+        let adminsActivos = 0;
+        if (adminsData && Array.isArray(adminsData.admins)) {
+          adminsActivos = adminsData.admins.length;
+        }
+
+        // Contar reservas de hoy (según /api/reservas/admin)
+        const reservasHoy = getCountGeneric(reservasData);
 
         setStats({
-          sucursalesActivas: data.sucursalesActivas,
-          adminsActivos: data.adminsActivos,
-          reservasHoy: data.reservasHoy,
-          ocupacion: data.ocupacion,
+          sucursalesActivas,
+          adminsActivos,
+          reservasHoy,
         });
       } catch (error) {
         console.error("Error al cargar estadísticas del superadmin:", error);
+        setStats({
+          sucursalesActivas: 0,
+          adminsActivos: 0,
+          reservasHoy: 0,
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchStats();
-  }, []);
-
-  const formatOcupacion = (value) => `${value}%`;
+  }, [baseUrl]);
 
   return (
     <div className="dashboard-container">
@@ -49,7 +87,7 @@ export default function SuperAdminDashboard() {
         <header className="dashboard-header">
           <h1 className="dashboard-title">Panel Superadmin</h1>
           <p className="dashboard-subtitle">
-            Controlá sucursales, administradores y reservas de todo el sistema.
+            Controlá sucursales, administradores, reservas y pagos de todo el sistema.
           </p>
         </header>
 
@@ -64,7 +102,7 @@ export default function SuperAdminDashboard() {
                 <h2 className="dashboard-card-title">Sucursales</h2>
               </div>
               <p className="dashboard-card-text">
-                Gestioná todas las sedes del complejo pádel.
+                Gestioná todas las sedes del complejo de pádel.
               </p>
               <div className="dashboard-card-info">
                 <span className="dashboard-card-number">
@@ -103,14 +141,14 @@ export default function SuperAdminDashboard() {
               </button>
             </article>
 
-            {/* Reservas */}
+            {/* Reservas de hoy */}
             <article className="dashboard-card">
               <div className="dashboard-card-header">
                 <div className="dashboard-card-icon">📅</div>
-                <h2 className="dashboard-card-title">Reservas</h2>
+                <h2 className="dashboard-card-title">Reservas de hoy</h2>
               </div>
               <p className="dashboard-card-text">
-                Visualizá todas las reservas del sistema y filtrá por sucursal.
+                Visualizá las reservas registradas para la fecha actual.
               </p>
               <div className="dashboard-card-info">
                 <span className="dashboard-card-number">
@@ -126,33 +164,34 @@ export default function SuperAdminDashboard() {
               </button>
             </article>
 
-            {/* Estadísticas */}
+            {/* Pagos */}
             <article className="dashboard-card">
               <div className="dashboard-card-header">
-                <div className="dashboard-card-icon">📊</div>
-                <h2 className="dashboard-card-title">Estadísticas</h2>
+                <div className="dashboard-card-icon">💳</div>
+                <h2 className="dashboard-card-title">Pagos</h2>
               </div>
               <p className="dashboard-card-text">
-                Consultá la ocupación general y la actividad por sucursal.
+                Consultá todos los pagos del sistema y revisá comprobantes.
               </p>
               <div className="dashboard-card-info">
-                <span className="dashboard-card-number">
-                  {formatOcupacion(stats.ocupacion)}
+                <span className="dashboard-card-number">-</span>
+                <span className="dashboard-card-label">
+                  pagos (ver detalle en la sección)
                 </span>
-                <span className="dashboard-card-label">ocupación promedio</span>
               </div>
               <button
                 className="dashboard-card-button"
-                onClick={() => navigate("/superadmin/reservas")}
+                onClick={() => navigate("/superadmin/pagos")}
               >
-                Ver reportes
+                Ver pagos
               </button>
             </article>
           </section>
         )}
 
+        {/* Sección inferior de ejemplo (se puede conectar más adelante) */}
         <section className="dashboard-section" style={{ marginTop: "30px" }}>
-          <h2 className="dashboard-section-title">Últimas reservas</h2>
+          <h2 className="dashboard-section-title">Últimas reservas (ejemplo)</h2>
           <table className="dashboard-table">
             <thead>
               <tr>

@@ -330,3 +330,22 @@
   background: #e04444;
   transform: translateY(-2px);
 }
+
+.dashboard-logout-button {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #ff4d4d;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(255, 77, 77, 0.4);
+  transition: 0.2s ease;
+}
+
+.dashboard-logout-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 77, 77, 0.55);
+}
+

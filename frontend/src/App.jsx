@@ -21,13 +21,14 @@ import { AuthProvider, AuthContext } from "./context/AuthContext";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminReservas from "./pages/admin/AdminReservas";
 import AdminCanchas from "./pages/admin/AdminCanchas";
-import AdminPagos from "./pages/admin/AdminPagos";   // ⬅️ NUEVO
+import AdminPagos from "./pages/admin/AdminPagos";
 
 // SUPERADMIN
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 import SuperAdminSucursales from "./pages/superadmin/SuperAdminSucursales";
 import SuperAdminReservas from "./pages/superadmin/SuperAdminReservas";
-import SuperAdminPagos from "./pages/superadmin/SuperAdminPagos"; // ⬅️ NUEVO
+import SuperAdminPagos from "./pages/superadmin/SuperAdminPagos";
+import SuperAdminJugadores from "./pages/superadmin/SuperAdminJugadores";
 
 // -------------------------------
 //   USUARIO LOGUEADO
@@ -132,7 +133,6 @@ function AppRoutes() {
         }
       />
 
-      {/* NUEVA RUTA → PAGOS */}
       <Route
         path="/admin/pagos"
         element={
@@ -172,12 +172,21 @@ function AppRoutes() {
         }
       />
 
-      {/* NUEVA RUTA → PAGOS GLOBAL */}
       <Route
         path="/superadmin/pagos"
         element={
           <RequireRole roles={["SUPERADMIN"]}>
             <SuperAdminPagos />
+          </RequireRole>
+        }
+      />
+
+      {/* NUEVA RUTA → JUGADORES */}
+      <Route
+        path="/superadmin/jugadores"
+        element={
+          <RequireRole roles={["SUPERADMIN"]}>
+            <SuperAdminJugadores />
           </RequireRole>
         }
       />
@@ -220,3 +229,4 @@ function App() {
 }
 
 export default App;
+

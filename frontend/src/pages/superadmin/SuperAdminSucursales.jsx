@@ -26,23 +26,45 @@ export default function SuperAdminSucursales() {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
 
-  /* =========================================================
-     Cargar sucursales
-  ========================================================== */
+  // Helper para fetch con token
+  const authFetch = async (url, options = {}) => {
+    const token = localStorage.getItem("token");
+    const headers = {
+      ...(options.headers || {}),
+      Authorization: token ? `Bearer ${token}` : "",
+      "Content-Type":
+        options.method && options.method !== "GET"
+          ? "application/json"
+          : (options.headers && options.headers["Content-Type"]) || undefined,
+    };
+
+    const res = await fetch(url, {
+      ...options,
+      headers,
+    });
+
+    return res;
+  };
+
+  // Cargar sucursales (lista admin)
   const loadSucursales = async () => {
     try {
-      const res = await fetch(`${baseUrl}/api/sucursales/admin`, {
-        credentials: "include",
+      setLoading(true);
+
+      const res = await authFetch(`${baseUrl}/api/sucursales/admin`, {
+        method: "GET",
       });
 
+      if (!res.ok) {
+        console.error("Status sucursales/admin:", res.status);
+        throw new Error("No se pudieron cargar las sucursales");
+      }
+
       const data = await res.json();
-
-      if (data.ok === false) throw new Error(data.msg);
-
-      // El backend devuelve un array directo → lo usamos así
-      setSucursales(data);
-    } catch (err) {
-      console.error("Error al cargar sucursales:", err);
+      // listarSucursalesAdmin devuelve directamente un array (rows)
+      setSucursales(Array.isArray(data) ? data : data.data || []);
+    } catch (e) {
+      console.error("Error al cargar sucursales (admin):", e);
       alert("No se pudieron cargar las sucursales");
     } finally {
       setLoading(false);
@@ -53,45 +75,36 @@ export default function SuperAdminSucursales() {
     loadSucursales();
   }, []);
 
-  /* =========================================================
-     Crear sucursal
-  ========================================================== */
+  // Crear Sucursal
   const handleCreate = async (e) => {
     e.preventDefault();
-
     try {
-      const res = await fetch(`${baseUrl}/api/sucursales`, {
+      const res = await authFetch(`${baseUrl}/api/sucursales`, {
         method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
 
       const data = await res.json();
-
-      if (data.ok === false) {
-        alert(data.msg || "Error al crear");
+      if (!res.ok || data.ok === false) {
+        alert(data.msg || "Error al crear sucursal");
         return;
       }
 
-      alert("Sucursal creada correctamente");
-
+      alert(data.msg || "Sucursal creada");
       setShowCreateModal(false);
       setForm(emptyForm);
       loadSucursales();
-    } catch (err) {
-      console.error("Error al crear:", err);
-      alert("Error al crear la sucursal");
+    } catch (e) {
+      console.error("Error al crear sucursal:", e);
+      alert("Error al crear sucursal");
     }
   };
 
-  /* =========================================================
-     Abrir modal edición
-  ========================================================== */
+  // Abrir modal de edición
   const openEditModal = (s) => {
     setEditId(s.id_sucursal);
     setForm({
-      nombre: s.nombre || "",
+      nombre: s.nombre,
       email: s.email || "",
       telefono: s.telefono || "",
       direccion: s.direccion || "",
@@ -103,69 +116,54 @@ export default function SuperAdminSucursales() {
     setShowEditModal(true);
   };
 
-  /* =========================================================
-     Guardar edición
-  ========================================================== */
+  // Guardar edición
   const handleEdit = async (e) => {
     e.preventDefault();
-
     try {
-      const res = await fetch(`${baseUrl}/api/sucursales/${editId}`, {
+      const res = await authFetch(`${baseUrl}/api/sucursales/${editId}`, {
         method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
 
       const data = await res.json();
-
-      if (data.ok === false) {
-        alert(data.msg || "Error al editar");
+      if (!res.ok || data.ok === false) {
+        alert(data.msg || "Error al actualizar sucursal");
         return;
       }
 
-      alert("Sucursal actualizada correctamente");
-
+      alert(data.msg || "Sucursal actualizada");
       setShowEditModal(false);
       setForm(emptyForm);
       setEditId(null);
       loadSucursales();
-    } catch (err) {
-      console.error("Error al editar:", err);
-      alert("Error al actualizar la sucursal");
+    } catch (e) {
+      console.error("Error al actualizar sucursal:", e);
+      alert("Error al actualizar sucursal");
     }
   };
 
-  /* =========================================================
-     Eliminar sucursal
-  ========================================================== */
+  // Eliminar sucursal
   const deleteSucursal = async (id) => {
-    if (!confirm("¿Eliminar sucursal? Esta acción es permanente.")) return;
+    if (!confirm("¿Eliminar sucursal? Esta acción no se puede deshacer.")) return;
 
     try {
-      const res = await fetch(`${baseUrl}/api/sucursales/${id}`, {
+      const res = await authFetch(`${baseUrl}/api/sucursales/${id}`, {
         method: "DELETE",
-        credentials: "include",
       });
 
       const data = await res.json();
-
-      if (data.ok === false) {
-        alert(data.msg || "Error al eliminar");
+      if (!res.ok || data.ok === false) {
+        alert(data.msg || "Error al eliminar sucursal");
         return;
       }
 
-      alert("Sucursal eliminada");
+      alert(data.msg || "Sucursal eliminada");
       loadSucursales();
-    } catch (err) {
-      console.error("Error al eliminar:", err);
-      alert("Error al eliminar la sucursal");
+    } catch (e) {
+      console.error("Error al eliminar sucursal:", e);
+      alert("Error al eliminar sucursal");
     }
   };
-
-  /* =========================================================
-     Render principal
-  ========================================================== */
 
   return (
     <div className="dashboard-container">
@@ -200,7 +198,7 @@ export default function SuperAdminSucursales() {
                   <th>Provincia</th>
                   <th>Email</th>
                   <th>Teléfono</th>
-                  <th style={{ width: "120px" }}>Acciones</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
 
@@ -233,9 +231,7 @@ export default function SuperAdminSucursales() {
 
                 {sucursales.length === 0 && (
                   <tr>
-                    <td colSpan="6" style={{ textAlign: "center", padding: "15px" }}>
-                      No hay sucursales registradas
-                    </td>
+                    <td colSpan="6">No hay sucursales cargadas.</td>
                   </tr>
                 )}
               </tbody>
@@ -244,42 +240,78 @@ export default function SuperAdminSucursales() {
         )}
       </main>
 
-      {/* =========================================================
-          MODAL CREAR
-      ========================================================== */}
+      {/* -------- MODAL CREAR -------- */}
       {showCreateModal && (
         <div className="modal-overlay">
           <div className="modal-container">
             <h2 className="modal-title">Crear sucursal</h2>
 
             <form className="modal-form" onSubmit={handleCreate}>
-              {Object.keys(emptyForm).map((key) =>
-                key.includes("hora") ? (
-                  <>
-                    <label>{key.replace("_", " ")}</label>
-                    <input
-                      key={key}
-                      type="time"
-                      value={form[key]}
-                      onChange={(e) =>
-                        setForm({ ...form, [key]: e.target.value })
-                      }
-                      required
-                    />
-                  </>
-                ) : (
-                  <input
-                    key={key}
-                    type="text"
-                    placeholder={key.charAt(0).toUpperCase() + key.slice(1)}
-                    value={form[key]}
-                    onChange={(e) =>
-                      setForm({ ...form, [key]: e.target.value })
-                    }
-                    required={["nombre", "ciudad", "provincia"].includes(key)}
-                  />
-                )
-              )}
+              <input
+                type="text"
+                placeholder="Nombre"
+                value={form.nombre}
+                onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                required
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="Teléfono"
+                value={form.telefono}
+                onChange={(e) =>
+                  setForm({ ...form, telefono: e.target.value })
+                }
+              />
+              <input
+                type="text"
+                placeholder="Dirección"
+                value={form.direccion}
+                onChange={(e) =>
+                  setForm({ ...form, direccion: e.target.value })
+                }
+              />
+              <input
+                type="text"
+                placeholder="Ciudad"
+                value={form.ciudad}
+                onChange={(e) => setForm({ ...form, ciudad: e.target.value })}
+                required
+              />
+              <input
+                type="text"
+                placeholder="Provincia"
+                value={form.provincia}
+                onChange={(e) =>
+                  setForm({ ...form, provincia: e.target.value })
+                }
+                required
+              />
+
+              <label>Horario apertura</label>
+              <input
+                type="time"
+                value={form.hora_apertura}
+                onChange={(e) =>
+                  setForm({ ...form, hora_apertura: e.target.value })
+                }
+                required
+              />
+
+              <label>Horario cierre</label>
+              <input
+                type="time"
+                value={form.hora_cierre}
+                onChange={(e) =>
+                  setForm({ ...form, hora_cierre: e.target.value })
+                }
+                required
+              />
 
               <div className="modal-actions">
                 <button type="submit" className="dashboard-card-button">
@@ -302,42 +334,78 @@ export default function SuperAdminSucursales() {
         </div>
       )}
 
-      {/* =========================================================
-          MODAL EDITAR
-      ========================================================== */}
+      {/* -------- MODAL EDITAR -------- */}
       {showEditModal && (
         <div className="modal-overlay">
           <div className="modal-container">
             <h2 className="modal-title">Editar sucursal</h2>
 
             <form className="modal-form" onSubmit={handleEdit}>
-              {Object.keys(emptyForm).map((key) =>
-                key.includes("hora") ? (
-                  <>
-                    <label>{key.replace("_", " ")}</label>
-                    <input
-                      key={key}
-                      type="time"
-                      value={form[key]}
-                      onChange={(e) =>
-                        setForm({ ...form, [key]: e.target.value })
-                      }
-                      required
-                    />
-                  </>
-                ) : (
-                  <input
-                    key={key}
-                    type="text"
-                    placeholder={key.charAt(0).toUpperCase() + key.slice(1)}
-                    value={form[key]}
-                    onChange={(e) =>
-                      setForm({ ...form, [key]: e.target.value })
-                    }
-                    required={["nombre", "ciudad", "provincia"].includes(key)}
-                  />
-                )
-              )}
+              <input
+                type="text"
+                placeholder="Nombre"
+                value={form.nombre}
+                onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                required
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="Teléfono"
+                value={form.telefono}
+                onChange={(e) =>
+                  setForm({ ...form, telefono: e.target.value })
+                }
+              />
+              <input
+                type="text"
+                placeholder="Dirección"
+                value={form.direccion}
+                onChange={(e) =>
+                  setForm({ ...form, direccion: e.target.value })
+                }
+              />
+              <input
+                type="text"
+                placeholder="Ciudad"
+                value={form.ciudad}
+                onChange={(e) => setForm({ ...form, ciudad: e.target.value })}
+                required
+              />
+              <input
+                type="text"
+                placeholder="Provincia"
+                value={form.provincia}
+                onChange={(e) =>
+                  setForm({ ...form, provincia: e.target.value })
+                }
+                required
+              />
+
+              <label>Horario apertura</label>
+              <input
+                type="time"
+                value={form.hora_apertura}
+                onChange={(e) =>
+                  setForm({ ...form, hora_apertura: e.target.value })
+                }
+                required
+              />
+
+              <label>Horario cierre</label>
+              <input
+                type="time"
+                value={form.hora_cierre}
+                onChange={(e) =>
+                  setForm({ ...form, hora_cierre: e.target.value })
+                }
+                required
+              />
 
               <div className="modal-actions">
                 <button type="submit" className="dashboard-card-button">

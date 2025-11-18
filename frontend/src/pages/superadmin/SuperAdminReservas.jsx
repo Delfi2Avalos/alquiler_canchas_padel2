@@ -1,87 +1,79 @@
+// src/pages/superadmin/SuperAdminReservas.jsx
 import { useEffect, useState } from "react";
 import "../../styles/Dashboard.css";
+import api from "../../api";
 
 export default function SuperAdminReservas() {
-  const baseUrl = import.meta.env.VITE_API_URL;
-
-  const [reservas, setReservas] = useState([]);
   const [sucursales, setSucursales] = useState([]);
-
+  const [reservas, setReservas] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Filtros
-  const [filtroSucursal, setFiltroSucursal] = useState("");
-  const [filtroEstado, setFiltroEstado] = useState("");
-  const [filtroFecha, setFiltroFecha] = useState("");
+  const [filtros, setFiltros] = useState({
+    sucursalId: "",
+    estado: "",
+    fecha: "",
+  });
 
-  // =============================
-  //   CARGAR SUCURSALES
-  // =============================
+  // ============ HELPERS ============
+  const formatearFecha = (iso) => {
+    if (!iso) return "-";
+    const [y, m, d] = iso.slice(0, 10).split("-");
+    return `${d}/${m}/${y}`;
+  };
+
+  const formatearHorario = (inicio, fin) => {
+    if (!inicio || !fin) return "-";
+    const h1 = inicio.slice(11, 16);
+    const h2 = fin.slice(11, 16);
+    return `${h1} - ${h2}`;
+  };
+
+  // ============ CARGAR SUCURSALES ============
   const loadSucursales = async () => {
     try {
-      const res = await fetch(`${baseUrl}/api/sucursales`);
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setSucursales(data);
-      }
+      const res = await api.get("/sucursales/admin");
+      const data = res.data?.data || res.data || [];
+      setSucursales(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error cargando sucursales:", err);
+      setSucursales([]);
     }
   };
 
-  // =============================
-  //   CARGAR RESERVAS
-  // =============================
+  // ============ CARGAR RESERVAS ============
   const loadReservas = async () => {
     try {
-      const params = new URLSearchParams();
+      setLoading(true);
 
-      if (filtroSucursal) params.append("sucursalId", filtroSucursal);
-      if (filtroEstado) params.append("estado", filtroEstado);
-      if (filtroFecha) params.append("fecha", filtroFecha);
+      const params = {};
+      if (filtros.sucursalId) params.sucursalId = filtros.sucursalId;
+      if (filtros.estado) params.estado = filtros.estado;
+      if (filtros.fecha) params.fecha = filtros.fecha; // YYYY-MM-DD
 
-      const res = await fetch(
-        `${baseUrl}/api/reservas/admin?${params.toString()}`,
-        { credentials: "include" }
-      );
+      const res = await api.get("/reservas/admin", { params });
 
-      const data = await res.json();
-
-      if (data.ok !== false) {
-        setReservas(data);
-      }
+      const data = res.data?.data || res.data || [];
+      setReservas(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Error cargando reservas:", err);
+      console.error("Error cargando reservas globales:", err);
+      setReservas([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Inicial
   useEffect(() => {
     loadSucursales();
     loadReservas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Volver a cargar cada vez que cambian los filtros
+  // Cada vez que cambian los filtros, recargamos
   useEffect(() => {
     loadReservas();
-  }, [filtroSucursal, filtroEstado, filtroFecha]);
-
-  // =============================
-  //   FORMATEAR FECHA Y HORA
-  // =============================
-  const formatDate = (iso) =>
-    new Date(iso).toLocaleDateString("es-AR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-
-  const formatTime = (iso) =>
-    new Date(iso).toLocaleTimeString("es-AR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtros]);
 
   return (
     <div className="dashboard-container">
@@ -95,31 +87,24 @@ export default function SuperAdminReservas() {
           </p>
         </header>
 
-        {/* ============================= */}
-        {/*          FILTROS             */}
-        {/* ============================= */}
+        {/* FILTROS */}
         <section className="dashboard-section" style={{ marginBottom: 20 }}>
           <h2 className="dashboard-section-title">Filtros</h2>
 
           <div
             style={{
               display: "flex",
-              gap: "12px",
+              gap: "15px",
               flexWrap: "wrap",
               marginBottom: "10px",
             }}
           >
             {/* Sucursal */}
             <select
-              value={filtroSucursal}
-              onChange={(e) => setFiltroSucursal(e.target.value)}
-              className="modal-form select"
-              style={{
-                padding: "8px 10px",
-                borderRadius: "10px",
-                border: "1px solid #ccc",
-                minWidth: "180px",
-              }}
+              value={filtros.sucursalId}
+              onChange={(e) =>
+                setFiltros({ ...filtros, sucursalId: e.target.value })
+              }
             >
               <option value="">Todas las sucursales</option>
               {sucursales.map((s) => (
@@ -131,14 +116,10 @@ export default function SuperAdminReservas() {
 
             {/* Estado */}
             <select
-              value={filtroEstado}
-              onChange={(e) => setFiltroEstado(e.target.value)}
-              style={{
-                padding: "8px 10px",
-                borderRadius: "10px",
-                border: "1px solid #ccc",
-                minWidth: "180px",
-              }}
+              value={filtros.estado}
+              onChange={(e) =>
+                setFiltros({ ...filtros, estado: e.target.value })
+              }
             >
               <option value="">Todos los estados</option>
               <option value="RESERVADA">Reservada</option>
@@ -146,27 +127,21 @@ export default function SuperAdminReservas() {
               <option value="EN_CURSO">En curso</option>
               <option value="COMPLETADA">Completada</option>
               <option value="CANCELADA">Cancelada</option>
-              <option value="NO_SHOW">No Show</option>
+              <option value="NO_SHOW">No show</option>
             </select>
 
             {/* Fecha */}
             <input
               type="date"
-              value={filtroFecha}
-              onChange={(e) => setFiltroFecha(e.target.value)}
-              style={{
-                padding: "8px 10px",
-                borderRadius: "10px",
-                border: "1px solid #ccc",
-              }}
+              value={filtros.fecha}
+              onChange={(e) =>
+                setFiltros({ ...filtros, fecha: e.target.value })
+              }
             />
           </div>
         </section>
 
-        {/* ============================= */}
-        {/*       TABLA PRINCIPAL         */}
-        {/* ============================= */}
-
+        {/* LISTADO */}
         <section className="dashboard-section">
           <h2 className="dashboard-section-title">Listado de reservas</h2>
 
@@ -179,29 +154,26 @@ export default function SuperAdminReservas() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Jugador</th>
                   <th>Sucursal</th>
                   <th>Cancha</th>
+                  <th>Jugador</th>
+                  <th>Estado</th>
                   <th>Fecha</th>
                   <th>Horario</th>
-                  <th>Estado</th>
-                  <th>Precio</th>
+                  <th>Precio total</th>
                   <th>Seña</th>
                 </tr>
               </thead>
-
               <tbody>
                 {reservas.map((r) => (
                   <tr key={r.id_reserva}>
                     <td>{r.id_reserva}</td>
-                    <td>{r.usuario}</td>
                     <td>{r.sucursal}</td>
                     <td>{r.cancha}</td>
-                    <td>{formatDate(r.inicio)}</td>
-                    <td>
-                      {formatTime(r.inicio)} - {formatTime(r.fin)}
-                    </td>
+                    <td>{r.usuario}</td>
                     <td>{r.estado}</td>
+                    <td>{formatearFecha(r.inicio)}</td>
+                    <td>{formatearHorario(r.inicio, r.fin)}</td>
                     <td>${r.precio_total}</td>
                     <td>${r.senia}</td>
                   </tr>

@@ -29,6 +29,7 @@ import SuperAdminSucursales from "./pages/superadmin/SuperAdminSucursales";
 import SuperAdminReservas from "./pages/superadmin/SuperAdminReservas";
 import SuperAdminPagos from "./pages/superadmin/SuperAdminPagos";
 import SuperAdminJugadores from "./pages/superadmin/SuperAdminJugadores";
+import SuperAdminAdmins from "./pages/superadmin/SuperAdminAdmins";
 
 // -------------------------------
 //   USUARIO LOGUEADO
@@ -180,6 +181,16 @@ function AppRoutes() {
           </RequireRole>
         }
       />
+
+      <Route
+  path="/superadmin/admins"
+  element={
+    <RequireRole roles={["SUPERADMIN"]}>
+      <SuperAdminAdmins />
+    </RequireRole>
+  }
+/>
+
 
       {/* NUEVA RUTA → JUGADORES */}
       <Route

@@ -1,203 +1,209 @@
 import { useEffect, useState } from "react";
 import "../../styles/Dashboard.css";
+import api from "../../api";
 
 export default function SuperAdminPagos() {
-  const baseUrl = import.meta.env.VITE_API_URL;
-
   const [pagos, setPagos] = useState([]);
-  const [sucursales, setSucursales] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [busqueda, setBusqueda] = useState("");
 
-  // Filtros
-  const [filtros, setFiltros] = useState({
-    sucursalId: "",
-    estado: "",
-    fecha: "",
-  });
+  // Helper para leer arrays de respuestas tipo { ok, data: [...] } o similar
+  const asArray = (res, preferredKey) => {
+    if (!res || !res.data) return [];
+    const d = res.data;
 
-  // Modal comprobante
-  const [selectedPago, setSelectedPago] = useState(null);
+    if (Array.isArray(d)) return d;
+    if (preferredKey && Array.isArray(d[preferredKey])) return d[preferredKey];
+    if (Array.isArray(d.data)) return d.data;
 
-  // ========================
-  //   CARGAR SUCURSALES
-  // ========================
-  const loadSucursales = async () => {
-    const res = await fetch(`${baseUrl}/api/sucursales/admin`, {
-      credentials: "include",
-    });
-    const data = await res.json();
-    if (data) setSucursales(data);
+    for (const v of Object.values(d)) {
+      if (Array.isArray(v)) return v;
+    }
+    return [];
   };
 
-  // ========================
-  //   CARGAR PAGOS
-  // ========================
   const loadPagos = async () => {
-    setLoading(true);
-
-    const params = new URLSearchParams();
-    if (filtros.sucursalId) params.append("sucursalId", filtros.sucursalId);
-    if (filtros.estado) params.append("estado", filtros.estado);
-    if (filtros.fecha) params.append("fecha", filtros.fecha);
-
-    const res = await fetch(`${baseUrl}/api/pagos/admin?${params.toString()}`, {
-      credentials: "include",
-    });
-
-    const data = await res.json();
-    if (data.ok) setPagos(data.data || data);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const res = await api.get("/pagos/admin");
+      const lista = asArray(res, "pagos");
+      setPagos(lista);
+      setErrorMsg("");
+      // Para inspeccionar qué campos llegan (podés verlo en la consola del navegador):
+      console.log("Pagos recibidos:", lista);
+    } catch (err) {
+      console.error("Error cargando pagos:", err?.response?.data || err);
+      if (err?.response?.status === 401) {
+        setErrorMsg(
+          "No autorizado: tu sesión puede haber expirado. Volvé a iniciar sesión."
+        );
+      } else {
+        setErrorMsg("Error cargando pagos desde el servidor.");
+      }
+      setPagos([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    loadSucursales();
     loadPagos();
   }, []);
 
-  // Cuando cambian los filtros
-  useEffect(() => {
-    loadPagos();
-  }, [filtros]);
+  // ---------- Helpers para mostrar campos ----------
+
+  const getFecha = (pago) => {
+    const raw =
+      pago.fecha_pago ||
+      pago.fecha ||
+      pago.fecha_reserva ||
+      pago.creado_en ||
+      pago.created_at ||
+      pago.fechaHora;
+
+    if (!raw) return "-";
+
+    const s = String(raw);
+    // si viene como "2025-11-18T01:23:45.000Z"
+    if (s.length >= 10) {
+      const [y, m, d] = s.slice(0, 10).split("-");
+      if (y && m && d) return `${d}/${m}/${y}`;
+      return s.slice(0, 10);
+    }
+    return s;
+  };
+
+  const getJugador = (pago) => {
+    return (
+      pago.jugador ||
+      pago.nombre_jugador ||
+      pago.usuario ||
+      pago.nombre_usuario ||
+      "-"
+    );
+  };
+
+  const getMetodo = (pago) => {
+    return pago.metodo || pago.metodo_pago || pago.forma_pago || "-";
+  };
+
+  const getSucursal = (pago) => {
+    return pago.sucursal || pago.nombre_sucursal || "-";
+  };
+
+  const getCancha = (pago) => {
+    return pago.cancha || pago.nombre_cancha || "-";
+  };
+
+  const getMonto = (pago) => {
+    return pago.monto ?? pago.total ?? "-";
+  };
+
+  const getEstado = (pago) => {
+    return pago.estado || "-";
+  };
+
+  // ---------- Buscador ----------
+
+  const pagosFiltrados = pagos.filter((p) => {
+    if (!busqueda) return true;
+    const t = busqueda.toLowerCase();
+
+    const campos = [
+      getJugador(p),
+      getSucursal(p),
+      getCancha(p),
+      String(getMonto(p)),
+      getMetodo(p),
+      getEstado(p),
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return campos.includes(t);
+  });
 
   return (
     <div className="dashboard-container">
-      <div className="dashboard-overlay"></div>
+      <div className="dashboard-overlay" />
 
       <main className="dashboard-content">
         <header className="dashboard-header">
-          <h1 className="dashboard-title">Pagos del Sistema</h1>
+          <h1 className="dashboard-title">Pagos</h1>
           <p className="dashboard-subtitle">
-            El Superadmin puede ver todos los pagos realizados.
+            Consultá pagos y comprobantes registrados.
           </p>
         </header>
 
-        {/* FILTROS */}
-        <section className="dashboard-section" style={{ marginBottom: 20 }}>
-          <h2 className="dashboard-section-title">Filtros</h2>
+        {loading && <p>Cargando pagos...</p>}
 
-          <div
-            style={{
-              display: "flex",
-              gap: "15px",
-              flexWrap: "wrap",
-              marginBottom: "10px",
-            }}
-          >
-            {/* Filtro sucursal */}
-            <select
-              value={filtros.sucursalId}
-              onChange={(e) =>
-                setFiltros({ ...filtros, sucursalId: e.target.value })
-              }
-            >
-              <option value="">Todas las sucursales</option>
-              {sucursales.map((s) => (
-                <option key={s.id_sucursal} value={s.id_sucursal}>
-                  {s.nombre}
-                </option>
-              ))}
-            </select>
+        {!loading && (
+          <>
+            {errorMsg && (
+              <p style={{ color: "red", marginBottom: "15px" }}>{errorMsg}</p>
+            )}
 
-            {/* Filtro estado */}
-            <select
-              value={filtros.estado}
-              onChange={(e) =>
-                setFiltros({ ...filtros, estado: e.target.value })
-              }
-            >
-              <option value="">Todos los estados</option>
-              <option value="PENDIENTE">Pendiente</option>
-              <option value="VERIFICADO">Verificado</option>
-              <option value="RECHAZADO">Rechazado</option>
-            </select>
-
-            {/* Filtro fecha */}
-            <input
-              type="date"
-              value={filtros.fecha}
-              onChange={(e) =>
-                setFiltros({ ...filtros, fecha: e.target.value })
-              }
-            />
-          </div>
-        </section>
-
-        {/* TABLA DE PAGOS */}
-        <section className="dashboard-section">
-          <h2 className="dashboard-section-title">Listado de Pagos</h2>
-
-          {loading ? (
-            <p>Cargando pagos...</p>
-          ) : pagos.length === 0 ? (
-            <p>No hay pagos registrados con los filtros seleccionados.</p>
-          ) : (
-            <table className="dashboard-table">
-              <thead>
-                <tr>
-                  <th>ID Pago</th>
-                  <th>Sucursal</th>
-                  <th>Cancha</th>
-                  <th>Usuario</th>
-                  <th>Monto</th>
-                  <th>Estado</th>
-                  <th>Fecha</th>
-                  <th>Comprobante</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {pagos.map((p) => (
-                  <tr key={p.id_pago}>
-                    <td>{p.id_pago}</td>
-                    <td>{p.sucursal}</td>
-                    <td>{p.cancha}</td>
-                    <td>{p.usuario}</td>
-                    <td>${p.monto}</td>
-                    <td>{p.estado}</td>
-                    <td>{p.comprobante_subido_en?.slice(0, 10)}</td>
-                    <td>
-                      <button
-                        className="dashboard-btn-edit"
-                        onClick={() => setSelectedPago(p)}
-                      >
-                        📄 Ver
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </section>
-      </main>
-
-      {/* MODAL VER COMPROBANTE */}
-      {selectedPago && (
-        <div className="modal-overlay">
-          <div className="modal-container">
-            <h2 className="modal-title">Comprobante de Pago</h2>
-
-            <img
-              src={selectedPago.comprobante_url}
-              alt="Comprobante"
-              style={{
-                width: "100%",
-                borderRadius: "10px",
-                marginBottom: "15px",
-              }}
-            />
-
-            <div className="modal-actions">
-              <button
-                className="modal-cancel"
-                onClick={() => setSelectedPago(null)}
+            <section className="dashboard-section">
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 16,
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
               >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                <h2 className="dashboard-section-title">Listado de pagos</h2>
+
+                {/* Buscador */}
+                <input
+                  type="text"
+                  placeholder="Buscar por jugador, sucursal, cancha, método o estado..."
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                  className="buscar-input"
+                  style={{ maxWidth: 360 }}
+                />
+              </div>
+
+              <table className="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Jugador</th>
+                    <th>Sucursal</th>
+                    <th>Cancha</th>
+                    <th>Monto</th>
+                    <th>Método</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagosFiltrados.length === 0 ? (
+                    <tr>
+                      <td colSpan={7}>No hay pagos para mostrar.</td>
+                    </tr>
+                  ) : (
+                    pagosFiltrados.map((p) => (
+                      <tr key={p.id_pago || p.id}>
+                        <td>{getFecha(p)}</td>
+                        <td>{getJugador(p)}</td>
+                        <td>{getSucursal(p)}</td>
+                        <td>{getCancha(p)}</td>
+                        <td>{getMonto(p)}</td>
+                        <td>{getMetodo(p)}</td>
+                        <td>{getEstado(p)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </section>
+          </>
+        )}
+      </main>
     </div>
   );
 }

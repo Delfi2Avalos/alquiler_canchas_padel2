@@ -32,7 +32,13 @@ export default function SuperAdminAdmins() {
   const loadAdmins = async () => {
     const res = await fetch(`${baseUrl}/api/admins`);
     const data = await res.json();
-    if (data.ok) setAdmins(data.admins);
+    if (data.ok && Array.isArray(data.admins)) {
+      setAdmins(data.admins);
+    } else if (Array.isArray(data)) {
+      setAdmins(data);
+    } else {
+      setAdmins([]);
+    }
   };
 
   // ============================
@@ -41,14 +47,36 @@ export default function SuperAdminAdmins() {
   const loadSucursales = async () => {
     const res = await fetch(`${baseUrl}/api/sucursales`);
     const data = await res.json();
-    if (Array.isArray(data)) setSucursales(data);
+
+    let lista = [];
+
+    if (Array.isArray(data)) {
+      lista = data;
+    } else if (Array.isArray(data.sucursales)) {
+      lista = data.sucursales;
+    } else if (Array.isArray(data.data)) {
+      lista = data.data;
+    } else {
+      // buscar la primera propiedad que sea array
+      for (const v of Object.values(data)) {
+        if (Array.isArray(v)) {
+          lista = v;
+          break;
+        }
+      }
+    }
+
+    setSucursales(lista);
   };
 
   useEffect(() => {
     const fetchAll = async () => {
-      await loadAdmins();
-      await loadSucursales();
-      setLoading(false);
+      try {
+        await loadAdmins();
+        await loadSucursales();
+      } finally {
+        setLoading(false);
+      }
     };
     fetchAll();
   }, []);
@@ -59,14 +87,26 @@ export default function SuperAdminAdmins() {
   const createAdmin = async (e) => {
     e.preventDefault();
 
+    if (!form.id_sucursal) {
+      alert("Debes seleccionar una sucursal para el administrador.");
+      return;
+    }
+
+    const payload = {
+      ...form,
+      telefono: form.telefono.trim() || null,
+      dni: form.dni.trim(),
+      id_sucursal: Number(form.id_sucursal),
+    };
+
     const res = await fetch(`${baseUrl}/api/admins`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
 
     const data = await res.json();
-    alert(data.msg || "Admin creado");
+    alert(data.msg || (data.ok ? "Admin creado" : "Error creando admin"));
 
     if (data.ok) {
       await loadAdmins();
@@ -82,12 +122,12 @@ export default function SuperAdminAdmins() {
     setEditId(admin.id_usuario);
     setForm({
       nombre: admin.nombre,
-      username: admin.username, // no editable
+      username: admin.username, // no editable en el modal
       email: admin.email,
       telefono: admin.telefono || "",
       dni: admin.dni || "",
-      id_sucursal: admin.id_sucursal || "",
-      password: "", // no se muestra para edición
+      id_sucursal: admin.id_sucursal ? String(admin.id_sucursal) : "",
+      password: "",
     });
     setShowEditModal(true);
   };
@@ -98,10 +138,22 @@ export default function SuperAdminAdmins() {
   const editAdmin = async (e) => {
     e.preventDefault();
 
+    if (!form.id_sucursal) {
+      alert("Debes seleccionar una sucursal para el administrador.");
+      return;
+    }
+
+    const payload = {
+      ...form,
+      telefono: form.telefono.trim() || null,
+      dni: form.dni.trim(),
+      id_sucursal: Number(form.id_sucursal),
+    };
+
     const res = await fetch(`${baseUrl}/api/admins/${editId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
 
     const data = await res.json();
@@ -126,7 +178,7 @@ export default function SuperAdminAdmins() {
     });
 
     const data = await res.json();
-    alert(data.msg);
+    alert(data.msg || (data.ok ? "Admin eliminado" : "Error eliminando admin"));
 
     if (data.ok) loadAdmins();
   };
@@ -161,7 +213,9 @@ export default function SuperAdminAdmins() {
                 TABLA
             ============================ */}
             <section className="dashboard-section">
-              <h2 className="dashboard-section-title">Lista de administradores</h2>
+              <h2 className="dashboard-section-title">
+                Lista de administradores
+              </h2>
 
               <table className="dashboard-table">
                 <thead>
@@ -243,19 +297,25 @@ export default function SuperAdminAdmins() {
                     />
                     <input
                       type="text"
+                      inputMode="numeric"
                       placeholder="Teléfono"
                       value={form.telefono}
-                      onChange={(e) =>
-                        setForm({ ...form, telefono: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const soloNumeros = e.target.value.replace(/\D/g, "");
+                        setForm({ ...form, telefono: soloNumeros });
+                      }}
                     />
                     <input
                       type="text"
+                      inputMode="numeric"
+                      maxLength={8}
                       placeholder="DNI"
                       value={form.dni}
-                      onChange={(e) =>
-                        setForm({ ...form, dni: e.target.value })
-                      }
+                      onChange={(e) => {
+                        let soloNumeros = e.target.value.replace(/\D/g, "");
+                        soloNumeros = soloNumeros.slice(0, 8);
+                        setForm({ ...form, dni: soloNumeros });
+                      }}
                       required
                     />
                     <input
@@ -273,8 +333,9 @@ export default function SuperAdminAdmins() {
                       onChange={(e) =>
                         setForm({ ...form, id_sucursal: e.target.value })
                       }
+                      required
                     >
-                      <option value="">Sin asignar</option>
+                      <option value="">Seleccione una sucursal</option>
                       {sucursales.map((s) => (
                         <option key={s.id_sucursal} value={s.id_sucursal}>
                           {s.nombre}
@@ -333,11 +394,27 @@ export default function SuperAdminAdmins() {
 
                     <input
                       type="text"
+                      inputMode="numeric"
+                      maxLength={8}
+                      placeholder="DNI"
+                      value={form.dni}
+                      onChange={(e) => {
+                        let soloNumeros = e.target.value.replace(/\D/g, "");
+                        soloNumeros = soloNumeros.slice(0, 8);
+                        setForm({ ...form, dni: soloNumeros });
+                      }}
+                      required
+                    />
+
+                    <input
+                      type="text"
+                      inputMode="numeric"
                       placeholder="Teléfono"
                       value={form.telefono}
-                      onChange={(e) =>
-                        setForm({ ...form, telefono: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const soloNumeros = e.target.value.replace(/\D/g, "");
+                        setForm({ ...form, telefono: soloNumeros });
+                      }}
                     />
 
                     <select
@@ -345,8 +422,9 @@ export default function SuperAdminAdmins() {
                       onChange={(e) =>
                         setForm({ ...form, id_sucursal: e.target.value })
                       }
+                      required
                     >
-                      <option value="">Sin asignar</option>
+                      <option value="">Seleccione una sucursal</option>
                       {sucursales.map((s) => (
                         <option key={s.id_sucursal} value={s.id_sucursal}>
                           {s.nombre}

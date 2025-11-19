@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { pool } from "../config/db.js";
+import bcrypt from "bcryptjs";
 
 const router = Router();
 
@@ -26,19 +27,28 @@ router.get("/", async (req, res) => {
 
 /**
  * POST /api/admins
- * Crea un nuevo admin
+ * Crea un nuevo admin (CON SUCURSAL OBLIGATORIA)
  */
 router.post("/", async (req, res) => {
   try {
-    const { nombre, username, email, telefono, dni, password, id_sucursal } =
-      req.body;
+    const {
+      nombre,
+      username,
+      email,
+      telefono = null,
+      dni,
+      password,
+      id_sucursal,
+    } = req.body;
 
-    if (!nombre || !username || !email || !dni || !password) {
-      return res.status(400).json({ ok: false, msg: "Faltan datos" });
+    if (!nombre || !username || !email || !dni || !password || !id_sucursal) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Faltan datos (la sucursal es obligatoria)",
+      });
     }
 
     // Hash del password
-    const bcrypt = await import("bcryptjs");
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
 
@@ -48,24 +58,31 @@ router.post("/", async (req, res) => {
       (rol, nombre, username, email, telefono, dni, hash_password, id_sucursal)
       VALUES ('ADMIN', ?, ?, ?, ?, ?, ?, ?)
       `,
-      [nombre, username, email, telefono, dni, hash, id_sucursal]
+      [nombre, username, email, telefono, dni, hash, Number(id_sucursal)]
     );
 
     res.json({ ok: true, msg: "Admin creado correctamente" });
   } catch (error) {
-    console.error(error);
+    console.error("Error creando admin:", error);
     res.status(500).json({ ok: false, msg: "Error creando admin" });
   }
 });
 
 /**
  * PUT /api/admins/:id
- * Edita un admin existente
+ * Edita un admin existente (también exige sucursal)
  */
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, email, telefono, id_sucursal } = req.body;
+    const { nombre, email, telefono = null, id_sucursal } = req.body;
+
+    if (!nombre || !email || !id_sucursal) {
+      return res.status(400).json({
+        ok: false,
+        msg: "Faltan datos (la sucursal es obligatoria)",
+      });
+    }
 
     await pool.query(
       `
@@ -73,7 +90,7 @@ router.put("/:id", async (req, res) => {
       SET nombre=?, email=?, telefono=?, id_sucursal=?
       WHERE id_usuario=? AND rol='ADMIN'
       `,
-      [nombre, email, telefono, id_sucursal, id]
+      [nombre, email, telefono, Number(id_sucursal), id]
     );
 
     res.json({ ok: true, msg: "Admin actualizado" });

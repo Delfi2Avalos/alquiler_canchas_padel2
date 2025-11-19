@@ -13,32 +13,30 @@ export default function Login() {
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
+  setError("");
 
-    try {
-      const res = await loginService({ username, password });
+  try {
+    const loginData = await loginService({ username, password });
 
-      console.log("Usuario logueado (respuesta cruda):", res);
-      console.log("ROL QUE VIENE DEL BACK:", res?.user?.role);
+    console.log("LoginData:", loginData);
+    console.log("USER:", loginData.user);
+    console.log("ROL NORMALIZADO:", loginData.user?.role);
 
-      if (res?.user) {
-        // El AuthContext ya normaliza el rol a MAYÚSCULAS
-        authLogin(res.user);
-
-        // 🔹 IMPORTANTE: no navegamos manualmente.
-        // El redirect por rol lo hace la ruta /login en App.jsx
-        return;
-      }
-
-      setError("Respuesta inválida del servidor");
-    } catch (err) {
-      const msg =
-        err?.response?.data?.msg ||
-        "Nombre de usuario o contraseña incorrectos";
-      setError(msg);
+    if (loginData?.user) {
+      // El AuthContext recibe un user ya normalizado
+      authLogin(loginData.user);
+      return;
     }
-  };
+
+    setError("Respuesta inválida del servidor");
+  } catch (err) {
+    const msg =
+      err?.response?.data?.msg ||
+      "Nombre de usuario o contraseña incorrectos";
+    setError(msg);
+  }
+};
 
   return (
     <div className="page-container">

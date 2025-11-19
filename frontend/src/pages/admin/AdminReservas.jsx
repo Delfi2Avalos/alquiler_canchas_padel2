@@ -1,34 +1,70 @@
 import { useEffect, useState } from "react";
+import api from "../../api"; // usamos el axios configurado con token
 import "../../styles/Dashboard.css";
 
 export default function AdminReservas() {
-  const baseUrl = import.meta.env.VITE_API_URL;
-
   const [reservas, setReservas] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [filtroEstado, setFiltroEstado] = useState("");
   const [filtroFecha, setFiltroFecha] = useState("");
 
+  // Ahora solo estos 3 estados existen en la BD
+  const estadosFiltro = ["PENDIENTE", "CONFIRMADA", "RECHAZADA"];
+
+  // ---------- helpers de formato ----------
+  const formatDate = (iso) =>
+    iso
+      ? new Date(iso).toLocaleDateString("es-AR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+      : "-";
+
+  const formatTime = (iso) =>
+    iso
+      ? new Date(iso).toLocaleTimeString("es-AR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "-";
+
+  // helper para convertir distintas formas de respuesta a array
+  const asArray = (res, preferredKey) => {
+    if (!res || !res.data) return [];
+    const d = res.data;
+
+    if (Array.isArray(d)) return d;
+    if (preferredKey && Array.isArray(d[preferredKey])) return d[preferredKey];
+    if (Array.isArray(d.data)) return d.data;
+
+    for (const v of Object.values(d)) {
+      if (Array.isArray(v)) return v;
+    }
+    return [];
+  };
+
   // ============================
-  //   CARGAR RESERVAS
+  //   CARGAR RESERVAS (MI SUCURSAL)
   // ============================
   const loadReservas = async () => {
     try {
-      const params = new URLSearchParams();
-      if (filtroEstado) params.append("estado", filtroEstado);
-      if (filtroFecha) params.append("fecha", filtroFecha);
+      setLoading(true);
 
-      const res = await fetch(
-        `${baseUrl}/api/reservas/sucursal?${params.toString()}`,
-        { credentials: "include" }
-      );
+      const res = await api.get("/reservas/sucursal", {
+        params: {
+          estado: filtroEstado || undefined,
+          fecha: filtroFecha || undefined,
+        },
+      });
 
-      const data = await res.json();
-
-      if (data.ok !== false) setReservas(data);
+      const lista = asArray(res, "reservas");
+      setReservas(lista);
+      console.log("Reservas de mi sucursal:", lista);
     } catch (err) {
-      console.error("Error cargando reservas:", err);
+      console.error("Error cargando reservas:", err?.response?.data || err);
+      setReservas([]);
     } finally {
       setLoading(false);
     }
@@ -43,51 +79,43 @@ export default function AdminReservas() {
   }, [filtroEstado, filtroFecha]);
 
   // ============================
-  //   CAMBIAR ESTADO
+  //   ACCIONES DEL ADMIN
   // ============================
   const cambiarEstado = async (id, nuevoEstado) => {
     try {
-      const res = await fetch(`${baseUrl}/api/reservas/${id}/estado`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estado: nuevoEstado }),
+      const res = await api.patch(`/reservas/${id}/estado`, {
+        estado: nuevoEstado,
       });
 
-      const data = await res.json();
-      alert(data.msg || "Estado actualizado");
-
-      if (data.ok !== false) loadReservas();
+      alert(res.data.msg || "Estado actualizado");
+      loadReservas();
     } catch (err) {
-      console.error("Error cambiando estado:", err);
+      console.error("Error cambiando estado:", err?.response?.data || err);
+      alert("Error cambiando estado");
     }
   };
 
+  const confirmarReserva = async (id) => {
+    if (!window.confirm("¿Confirmar esta reserva?")) return;
+    await cambiarEstado(id, "CONFIRMADA");
+  };
+
+  const rechazarReserva = async (id) => {
+    if (!window.confirm("¿Rechazar esta reserva?")) return;
+    await cambiarEstado(id, "RECHAZADA");
+  };
+
+  const modificarReserva = (reserva) => {
+    // Por ahora solo mostramos un aviso.
+    // Más adelante acá podés abrir un modal para cambiar horario/cancha, etc.
+    alert(
+      `Funcionalidad de modificar reserva #${reserva.id_reserva} (solo PENDIENTE) - pendiente de implementación`
+    );
+  };
+
   // ============================
-  //   FORMATOS
+  //   UI
   // ============================
-  const formatDate = (iso) =>
-    new Date(iso).toLocaleDateString("es-AR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-
-  const formatTime = (iso) =>
-    new Date(iso).toLocaleTimeString("es-AR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-  const estadosPermitidos = [
-    "RESERVADA",
-    "CONFIRMADA",
-    "EN_CURSO",
-    "COMPLETADA",
-    "CANCELADA",
-    "NO_SHOW",
-  ];
-
   return (
     <div className="dashboard-container">
       <div className="dashboard-overlay" />
@@ -124,7 +152,7 @@ export default function AdminReservas() {
               }}
             >
               <option value="">Todos los estados</option>
-              {estadosPermitidos.map((e) => (
+              {estadosFiltro.map((e) => (
                 <option key={e} value={e}>
                   {e}
                 </option>
@@ -163,50 +191,71 @@ export default function AdminReservas() {
                   <th>Fecha</th>
                   <th>Horario</th>
                   <th>Estado</th>
-                  <th>Cambiar</th>
+                  <th>Acciones</th>
                   <th>Precio</th>
                   <th>Seña</th>
                 </tr>
               </thead>
 
               <tbody>
-                {reservas.map((r) => (
-                  <tr key={r.id_reserva}>
-                    <td>{r.id_reserva}</td>
-                    <td>{r.usuario}</td>
-                    <td>{r.cancha}</td>
-                    <td>{formatDate(r.inicio)}</td>
-                    <td>
-                      {formatTime(r.inicio)} - {formatTime(r.fin)}
-                    </td>
+                {reservas.map((r) => {
+                  const esPendiente = r.estado === "PENDIENTE";
 
-                    <td>{r.estado}</td>
+                  return (
+                    <tr key={r.id_reserva}>
+                      <td>{r.id_reserva}</td>
+                      <td>{r.usuario || "-"}</td>
+                      <td>{r.cancha || "-"}</td>
+                      <td>{formatDate(r.inicio)}</td>
+                      <td>
+                        {formatTime(r.inicio)} - {formatTime(r.fin)}
+                      </td>
 
-                    {/* CAMBIAR ESTADO */}
-                    <td>
-                      <select
-                        value={r.estado}
-                        onChange={(e) =>
-                          cambiarEstado(r.id_reserva, e.target.value)
-                        }
-                        style={{
-                          padding: "5px 8px",
-                          borderRadius: "8px",
-                          border: "1px solid #bbb",
-                        }}
-                      >
-                        {estadosPermitidos.map((e) => (
-                          <option key={e} value={e}>
-                            {e}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
+                      <td>{r.estado}</td>
 
-                    <td>${r.precio_total}</td>
-                    <td>${r.senia}</td>
-                  </tr>
-                ))}
+                      <td>
+                        {esPendiente ? (
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: 8,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <button
+                              className="dashboard-card-button"
+                              style={{ padding: "4px 8px" }}
+                              onClick={() => confirmarReserva(r.id_reserva)}
+                            >
+                              Confirmar
+                            </button>
+
+                            <button
+                              className="dashboard-btn-delete"
+                              style={{ padding: "4px 8px" }}
+                              onClick={() => rechazarReserva(r.id_reserva)}
+                            >
+                              Rechazar
+                            </button>
+
+                            <button
+                              className="dashboard-btn-edit"
+                              style={{ padding: "4px 8px" }}
+                              onClick={() => modificarReserva(r)}
+                            >
+                              Modificar
+                            </button>
+                          </div>
+                        ) : (
+                          <span>-</span>
+                        )}
+                      </td>
+
+                      <td>${r.precio_total}</td>
+                      <td>${r.senia}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}

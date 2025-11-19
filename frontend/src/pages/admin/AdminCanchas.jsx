@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import "../../styles/Dashboard.css";
+import api from "../../api"; // axios con baseURL + token
 
 export default function AdminCanchas() {
-  const baseUrl = import.meta.env.VITE_API_URL;
-
   const [canchas, setCanchas] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Modal
+  // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -18,25 +17,25 @@ export default function AdminCanchas() {
     piso: "CESPED",
     paredes: "ALAMBRADO",
     observaciones: "",
+    estado: "ACTIVA",
   };
 
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
 
   // ===============================
-  //   CARGAR CANCHAS
+  //   CARGAR CANCHAS (MI SUCURSAL)
   // ===============================
   const loadCanchas = async () => {
     try {
-      const res = await fetch(`${baseUrl}/api/canchas`, {
-        credentials: "include",
-      });
+      setLoading(true);
 
-      const data = await res.json();
-
-      if (Array.isArray(data)) setCanchas(data);
+      const res = await api.get("/canchas/mi");
+      const data = res.data?.data || res.data || [];
+      setCanchas(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Error cargando canchas:", err);
+      console.error("Error cargando canchas:", err?.response?.data || err);
+      setCanchas([]);
     } finally {
       setLoading(false);
     }
@@ -53,23 +52,25 @@ export default function AdminCanchas() {
     e.preventDefault();
 
     try {
-      const res = await fetch(`${baseUrl}/api/canchas`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const payload = {
+        ...form,
+        cubierta: Number(form.cubierta),
+        iluminacion: Number(form.iluminacion),
+      };
 
-      const data = await res.json();
+      const res = await api.post("/canchas", payload);
+      const data = res.data;
+
       alert(data.msg || "Cancha creada");
 
-      if (data.ok || data.id_cancha) {
+      if (data.id_cancha || data.ok !== false) {
         setShowCreateModal(false);
         setForm(emptyForm);
         loadCanchas();
       }
     } catch (err) {
-      console.error("Error creando cancha:", err);
+      console.error("Error creando cancha:", err?.response?.data || err);
+      alert("Error creando cancha");
     }
   };
 
@@ -80,11 +81,12 @@ export default function AdminCanchas() {
     setEditId(c.id_cancha);
     setForm({
       nombre: c.nombre,
-      cubierta: c.cubierta,
-      iluminacion: c.iluminacion,
-      piso: c.piso,
-      paredes: c.paredes,
+      cubierta: c.cubierta ? 1 : 0,
+      iluminacion: c.iluminacion ? 1 : 0,
+      piso: c.piso || "CESPED",
+      paredes: c.paredes || "ALAMBRADO",
       observaciones: c.observaciones || "",
+      estado: c.estado || "ACTIVA",
     });
     setShowEditModal(true);
   };
@@ -93,14 +95,15 @@ export default function AdminCanchas() {
     e.preventDefault();
 
     try {
-      const res = await fetch(`${baseUrl}/api/canchas/${editId}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const payload = {
+        ...form,
+        cubierta: Number(form.cubierta),
+        iluminacion: Number(form.iluminacion),
+      };
 
-      const data = await res.json();
+      const res = await api.put(`/canchas/${editId}`, payload);
+      const data = res.data;
+
       alert(data.msg || "Cancha actualizada");
 
       if (data.ok !== false) {
@@ -110,7 +113,8 @@ export default function AdminCanchas() {
         loadCanchas();
       }
     } catch (err) {
-      console.error("Error editando cancha:", err);
+      console.error("Error editando cancha:", err?.response?.data || err);
+      alert("Error editando cancha");
     }
   };
 
@@ -121,20 +125,21 @@ export default function AdminCanchas() {
     if (!confirm("¿Eliminar esta cancha?")) return;
 
     try {
-      const res = await fetch(`${baseUrl}/api/canchas/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const res = await api.delete(`/canchas/${id}`);
+      const data = res.data;
 
-      const data = await res.json();
       alert(data.msg || "Cancha eliminada");
 
       if (data.ok !== false) loadCanchas();
     } catch (err) {
-      console.error("Error eliminando cancha:", err);
+      console.error("Error eliminando cancha:", err?.response?.data || err);
+      alert("Error eliminando cancha");
     }
   };
 
+  // ===============================
+  //   UI
+  // ===============================
   return (
     <div className="dashboard-container">
       <div className="dashboard-overlay" />
@@ -160,6 +165,8 @@ export default function AdminCanchas() {
 
           {loading ? (
             <p>Cargando canchas...</p>
+          ) : canchas.length === 0 ? (
+            <p>No hay canchas registradas para tu sucursal.</p>
           ) : (
             <table className="dashboard-table">
               <thead>
@@ -363,7 +370,7 @@ export default function AdminCanchas() {
                   setForm({ ...form, paredes: e.target.value })
                 }
               >
-                <option value="ALAMBRADO">Alambrado</	option>
+                <option value="ALAMBRADO">Alambrado</option>
                 <option value="VIDRIO">Vidrio</option>
                 <option value="MIXTAS">Mixtas</option>
               </select>
@@ -402,4 +409,3 @@ export default function AdminCanchas() {
     </div>
   );
 }
-

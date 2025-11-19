@@ -1,4 +1,3 @@
-// src/pages/superadmin/SuperAdminReservas.jsx
 import { useEffect, useState } from "react";
 import "../../styles/Dashboard.css";
 import api from "../../api";
@@ -47,7 +46,7 @@ export default function SuperAdminReservas() {
 
       const params = {};
       if (filtros.sucursalId) params.sucursalId = filtros.sucursalId;
-      if (filtros.estado) params.estado = filtros.estado;
+      if (filtros.estado) params.estado = filtros.estado; // ya viene en MAYÚSCULAS
       if (filtros.fecha) params.fecha = filtros.fecha; // YYYY-MM-DD
 
       const res = await api.get("/reservas/admin", { params });
@@ -114,7 +113,7 @@ export default function SuperAdminReservas() {
               ))}
             </select>
 
-            {/* Estado */}
+            {/* Estado (solo los 3 nuevos) */}
             <select
               value={filtros.estado}
               onChange={(e) =>
@@ -122,12 +121,9 @@ export default function SuperAdminReservas() {
               }
             >
               <option value="">Todos los estados</option>
-              <option value="RESERVADA">Reservada</option>
+              <option value="PENDIENTE">Pendiente</option>
               <option value="CONFIRMADA">Confirmada</option>
-              <option value="EN_CURSO">En curso</option>
-              <option value="COMPLETADA">Completada</option>
-              <option value="CANCELADA">Cancelada</option>
-              <option value="NO_SHOW">No show</option>
+              <option value="RECHAZADA">Rechazada</option>
             </select>
 
             {/* Fecha */}

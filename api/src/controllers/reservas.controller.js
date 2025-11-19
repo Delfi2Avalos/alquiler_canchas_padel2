@@ -46,6 +46,7 @@ export const disponibilidad = async (req, res) => {
  * - Requiere auth (JUGADOR o ADMIN)
  * - Siempre obtiene id_sucursal desde la cancha (no confía en el body)
  * - Calcula seña = 30% del precio_total
+ * - Crea la reserva en estado PENDIENTE
  */
 export const crearReserva = async (req, res) => {
   const conn = await pool.getConnection();
@@ -62,7 +63,10 @@ export const crearReserva = async (req, res) => {
       );
     }
     if (!isISODateTime(inicio) || !isISODateTime(fin)) {
-      return badRequest(res, "Formato de fecha inválido. Use YYYY-MM-DDTHH:mm");
+      return badRequest(
+        res,
+        "Formato de fecha inválido. Use YYYY-MM-DDTHH:mm"
+      );
     }
 
     const precio = Number(precio_total);
@@ -143,18 +147,18 @@ export const crearReserva = async (req, res) => {
       return conflict(res, "Horario no disponible (solapado)");
     }
 
-    // 3) Insertar reserva
+    // 3) Insertar reserva en estado PENDIENTE
     const [ins] = await conn.query(
       `INSERT INTO reserva
          (id_sucursal, id_cancha, id_usuario, inicio, fin, estado, precio_total, senia)
-       VALUES (?, ?, ?, ?, ?, 'RESERVADA', ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, 'PENDIENTE', ?, ?)`,
       [id_sucursal, id_cancha, id_usuario || null, inicio, fin, precio, senia]
     );
 
     await conn.commit();
     return created(res, {
       id_reserva: ins.insertId,
-      estado: "RESERVADA",
+      estado: "PENDIENTE",
       precio_total: precio,
       senia,
     });
@@ -179,10 +183,11 @@ export const crearReserva = async (req, res) => {
 /**
  * PATCH /api/reservas/:id/estado
  * body: { estado } con uno de:
- *  'RESERVADA','CONFIRMADA','EN_CURSO','COMPLETADA','CANCELADA','NO_SHOW'
+ *  'CONFIRMADA','RECHAZADA'
  *
  * - Solo ADMIN
  * - Solo permite cambiar estado de reservas de su sucursal
+ * - Solo si la reserva está PENDIENTE
  */
 export const cambiarEstado = async (req, res) => {
   try {
@@ -198,21 +203,16 @@ export const cambiarEstado = async (req, res) => {
 
     const id = Number(req.params.id);
     const { estado } = req.body || {};
-    const permitidos = [
-      "RESERVADA",
-      "CONFIRMADA",
-      "EN_CURSO",
-      "COMPLETADA",
-      "CANCELADA",
-      "NO_SHOW",
-    ];
+    const permitidos = ["CONFIRMADA", "RECHAZADA"];
 
     if (!id) return badRequest(res, "id inválido");
-    if (!permitidos.includes(estado)) return badRequest(res, "Estado inválido");
+    if (!permitidos.includes(estado)) {
+      return badRequest(res, "Estado inválido (solo CONFIRMADA o RECHAZADA)");
+    }
 
-    // Verificar que la reserva pertenece a la sucursal del admin
+    // Verificar que la reserva pertenece a la sucursal del admin y que está PENDIENTE
     const [rows] = await pool.query(
-      `SELECT id_sucursal 
+      `SELECT id_sucursal, estado
        FROM reserva 
        WHERE id_reserva = ? 
        LIMIT 1`,
@@ -221,10 +221,20 @@ export const cambiarEstado = async (req, res) => {
     if (!rows.length) {
       return badRequest(res, "Reserva no encontrada");
     }
-    if (rows[0].id_sucursal !== adminSucursal) {
+
+    const r = rows[0];
+
+    if (r.id_sucursal !== adminSucursal) {
       return conflict(
         res,
         "No puedes modificar reservas de otra sucursal"
+      );
+    }
+
+    if (r.estado !== "PENDIENTE") {
+      return conflict(
+        res,
+        "Solo se pueden confirmar o rechazar reservas PENDIENTES"
       );
     }
 

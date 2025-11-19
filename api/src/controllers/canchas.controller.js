@@ -20,9 +20,13 @@ export const listarCanchasPorSucursalPublic = asyncHandler(async (req, res) => {
   const [rows] = await pool.query(
     `SELECT 
         id_cancha,
+        id_sucursal,
         nombre,
         cubierta,
         iluminacion,
+        piso,
+        paredes,
+        observaciones,
         estado
      FROM cancha
      WHERE id_sucursal = ?
@@ -50,6 +54,9 @@ export const listarCanchasDeMiSucursal = asyncHandler(async (req, res) => {
         nombre,
         cubierta,
         iluminacion,
+        piso,
+        paredes,
+        observaciones,
         estado
      FROM cancha
      WHERE id_sucursal = ?
@@ -62,12 +69,15 @@ export const listarCanchasDeMiSucursal = asyncHandler(async (req, res) => {
 
 /**
  * CREAR CANCHA EN MI SUCURSAL (SOLO ADMIN)
- * POST /api/canchas/
+ * POST /api/canchas
  *
  * Body esperado:
  * - nombre (string, requerido)
- * - cubierta (boolean, opcional, default false)
- * - iluminacion (boolean, opcional, default true)
+ * - cubierta (0/1 o boolean, opcional, default 0)
+ * - iluminacion (0/1 o boolean, opcional, default 1)
+ * - piso ('CESPED' | 'CEMENTO' | 'MIXTO', opcional, default 'CESPED')
+ * - paredes ('ALAMBRADO' | 'VIDRIO' | 'MIXTAS', opcional, default 'ALAMBRADO')
+ * - observaciones (string, opcional)
  * - estado ('ACTIVA' | 'INACTIVA' | 'MANTENIMIENTO', opcional, default 'ACTIVA')
  */
 export const crearCanchaEnMiSucursal = asyncHandler(async (req, res) => {
@@ -76,14 +86,21 @@ export const crearCanchaEnMiSucursal = asyncHandler(async (req, res) => {
     return badRequest(res, "El usuario no tiene sucursal asociada");
   }
 
-  let { nombre, cubierta, iluminacion, estado } = req.body || {};
+  let {
+    nombre,
+    cubierta,
+    iluminacion,
+    piso,
+    paredes,
+    observaciones,
+    estado,
+  } = req.body || {};
 
   nombre = String(nombre || "").trim();
   if (!nombre) {
     return badRequest(res, "El nombre de la cancha es requerido");
   }
 
-  // Normalizar valores
   const cubiertaBool =
     typeof cubierta === "boolean"
       ? cubierta
@@ -93,18 +110,41 @@ export const crearCanchaEnMiSucursal = asyncHandler(async (req, res) => {
       ? iluminacion
       : iluminacion === "1" || iluminacion === 1;
 
+  const pisoVal = ["CESPED", "CEMENTO", "MIXTO"].includes(
+    String(piso || "").toUpperCase()
+  )
+    ? String(piso).toUpperCase()
+    : "CESPED";
+
+  const paredesVal = ["ALAMBRADO", "VIDRIO", "MIXTAS"].includes(
+    String(paredes || "").toUpperCase()
+  )
+    ? String(paredes).toUpperCase()
+    : "ALAMBRADO";
+
   const estadoVal = ["ACTIVA", "INACTIVA", "MANTENIMIENTO"].includes(
     String(estado || "").toUpperCase()
   )
     ? String(estado).toUpperCase()
     : "ACTIVA";
 
+  const obs = (observaciones || "").trim() || null;
+
   try {
     const [ins] = await pool.query(
       `INSERT INTO cancha 
-         (id_sucursal, nombre, cubierta, iluminacion, estado)
-       VALUES (?, ?, ?, ?, ?)`,
-      [sucursalId, nombre, cubiertaBool ? 1 : 0, iluminacionBool ? 1 : 0, estadoVal]
+         (id_sucursal, nombre, cubierta, iluminacion, piso, paredes, observaciones, estado)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        sucursalId,
+        nombre,
+        cubiertaBool ? 1 : 0,
+        iluminacionBool ? 1 : 0,
+        pisoVal,
+        paredesVal,
+        obs,
+        estadoVal,
+      ]
     );
 
     return ok(res, {
@@ -126,8 +166,6 @@ export const crearCanchaEnMiSucursal = asyncHandler(async (req, res) => {
 /**
  * ACTUALIZAR CANCHA DE MI SUCURSAL (SOLO ADMIN)
  * PUT /api/canchas/:id
- *
- * - Solo permite modificar canchas cuya id_sucursal = req.user.sucursal
  */
 export const actualizarCanchaDeMiSucursal = asyncHandler(async (req, res) => {
   const sucursalId = req.user?.sucursal;
@@ -140,7 +178,15 @@ export const actualizarCanchaDeMiSucursal = asyncHandler(async (req, res) => {
     return badRequest(res, "ID de cancha inválido");
   }
 
-  let { nombre, cubierta, iluminacion, estado } = req.body || {};
+  let {
+    nombre,
+    cubierta,
+    iluminacion,
+    piso,
+    paredes,
+    observaciones,
+    estado,
+  } = req.body || {};
 
   nombre = String(nombre || "").trim();
   if (!nombre) {
@@ -156,11 +202,25 @@ export const actualizarCanchaDeMiSucursal = asyncHandler(async (req, res) => {
       ? iluminacion
       : iluminacion === "1" || iluminacion === 1;
 
+  const pisoVal = ["CESPED", "CEMENTO", "MIXTO"].includes(
+    String(piso || "").toUpperCase()
+  )
+    ? String(piso).toUpperCase()
+    : "CESPED";
+
+  const paredesVal = ["ALAMBRADO", "VIDRIO", "MIXTAS"].includes(
+    String(paredes || "").toUpperCase()
+  )
+    ? String(paredes).toUpperCase()
+    : "ALAMBRADO";
+
   const estadoVal = ["ACTIVA", "INACTIVA", "MANTENIMIENTO"].includes(
     String(estado || "").toUpperCase()
   )
     ? String(estado).toUpperCase()
     : "ACTIVA";
+
+  const obs = (observaciones || "").trim() || null;
 
   try {
     const [upd] = await pool.query(
@@ -168,6 +228,9 @@ export const actualizarCanchaDeMiSucursal = asyncHandler(async (req, res) => {
        SET nombre = ?,
            cubierta = ?,
            iluminacion = ?,
+           piso = ?,
+           paredes = ?,
+           observaciones = ?,
            estado = ?
        WHERE id_cancha = ?
          AND id_sucursal = ?`,
@@ -175,6 +238,9 @@ export const actualizarCanchaDeMiSucursal = asyncHandler(async (req, res) => {
         nombre,
         cubiertaBool ? 1 : 0,
         iluminacionBool ? 1 : 0,
+        pisoVal,
+        paredesVal,
+        obs,
         estadoVal,
         id,
         sucursalId,
@@ -204,8 +270,6 @@ export const actualizarCanchaDeMiSucursal = asyncHandler(async (req, res) => {
 /**
  * ELIMINAR CANCHA DE MI SUCURSAL (SOLO ADMIN)
  * DELETE /api/canchas/:id
- *
- * - Solo elimina si la cancha pertenece a la sucursal del admin
  */
 export const eliminarCanchaDeMiSucursal = asyncHandler(async (req, res) => {
   const sucursalId = req.user?.sucursal;

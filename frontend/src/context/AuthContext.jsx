@@ -5,31 +5,33 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); 
 
   // Normaliza el rol siempre a MAYÚSCULAS
   const normalizeUser = (userData) => {
     if (!userData) return null;
     return {
       ...userData,
-      role: (userData.role || "").toUpperCase(), // 👈 Normalización importante
+      role: (userData.role || "").toUpperCase(),
     };
   };
 
-  // Cargar usuario guardado al iniciar la app
+  // Cargar usuario al iniciar la app
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
         const parsed = JSON.parse(storedUser);
         const normalized = normalizeUser(parsed);
         setUser(normalized);
-      } catch {
-        localStorage.removeItem("user");
       }
+    } catch {
+      localStorage.removeItem("user");
     }
+
+    setLoading(false); // 👈 IMPORTANTE
   }, []);
 
-  // Login: guardamos usuario normalizado
   const login = (userData) => {
     const normalized = normalizeUser(userData);
 
@@ -42,7 +44,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout: limpiar token/usuario
   const logout = () => {
     authLogout();
     setUser(null);
@@ -50,7 +51,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

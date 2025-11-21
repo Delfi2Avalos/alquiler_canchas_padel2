@@ -7,14 +7,14 @@ import {
   serverError,
 } from "../utils/http.js";
 
-// Helpers simples
+// Helpers
 const isISODate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
 const isISODateTime = (s) =>
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(String(s || ""));
 
 /**
  * GET /api/reservas/disponibilidad?canchaId=&fecha=YYYY-MM-DD
- * - Lista reservas existentes para una cancha en un día
+ * Devuelve las reservas existentes de un día
  */
 export const disponibilidad = async (req, res) => {
   try {
@@ -40,33 +40,65 @@ export const disponibilidad = async (req, res) => {
 };
 
 /**
+ * GET /api/reservas/horarios?canchaId=&fecha=
+ * Devuelve horarios LIBRE / OCUPADO
+ */
+export const horariosDisponibles = async (req, res) => {
+  try {
+    const canchaId = Number(req.query.canchaId);
+    const fecha = req.query.fecha;
+
+    if (!canchaId || !fecha || !isISODate(fecha)) {
+      return badRequest(res, "canchaId y fecha (YYYY-MM-DD) son requeridos");
+    }
+
+    const horariosBase = [
+      "08:00","09:00","10:00","11:00","12:00",
+      "13:00","14:00","15:00","16:00",
+      "17:00","18:00","19:00","20:00","21:00","22:00"
+    ];
+
+    const [reservas] = await pool.query(
+      `SELECT inicio
+       FROM reserva
+       WHERE id_cancha = ?
+         AND DATE(inicio) = DATE(?)
+         AND estado IN ('PENDIENTE','CONFIRMADA')
+       ORDER BY inicio`,
+      [canchaId, fecha]
+    );
+
+    const ocupados = reservas.map(
+      (r) => r.inicio.toISOString().slice(11, 16)
+    );
+
+    const respuesta = horariosBase.map((h) => ({
+      hora: h,
+      estado: ocupados.includes(h) ? "OCUPADO" : "LIBRE",
+    }));
+
+    return ok(res, respuesta);
+  } catch (err) {
+    return serverError(res, err);
+  }
+};
+
+/**
  * POST /api/reservas
- * body: { id_cancha, inicio, fin, precio_total }
- *
- * - Requiere auth (JUGADOR o ADMIN)
- * - Siempre obtiene id_sucursal desde la cancha (no confía en el body)
- * - Calcula seña = 30% del precio_total
- * - Crea la reserva en estado PENDIENTE
+ * Crea una reserva en estado PENDIENTE
  */
 export const crearReserva = async (req, res) => {
   const conn = await pool.getConnection();
   try {
     const { id_cancha, inicio, fin, precio_total } = req.body || {};
-    const id_usuario = req.user?.id; // viene del token por requireAuth()
+    const id_usuario = req.user?.id;
     const rol = req.user?.role || req.user?.rol || null;
 
-    // Validaciones básicas
     if (!id_cancha || !inicio || !fin || precio_total == null) {
-      return badRequest(
-        res,
-        "Campos requeridos: id_cancha, inicio, fin, precio_total"
-      );
+      return badRequest(res, "id_cancha, inicio, fin y precio_total son requeridos");
     }
     if (!isISODateTime(inicio) || !isISODateTime(fin)) {
-      return badRequest(
-        res,
-        "Formato de fecha inválido. Use YYYY-MM-DDTHH:mm"
-      );
+      return badRequest(res, "inicio y fin deben ser formato YYYY-MM-DDTHH:mm");
     }
 
     const precio = Number(precio_total);
@@ -74,65 +106,52 @@ export const crearReserva = async (req, res) => {
       return badRequest(res, "precio_total inválido");
     }
 
-    // Seña 30%
     const senia = Number((precio * 0.3).toFixed(2));
 
     await conn.beginTransaction();
 
-    // 0) Obtener sucursal desde la cancha
     const [canchas] = await conn.query(
-      `SELECT id_sucursal 
-       FROM cancha 
-       WHERE id_cancha = ? 
-       LIMIT 1`,
+      `SELECT id_sucursal FROM cancha WHERE id_cancha = ? LIMIT 1`,
       [id_cancha]
     );
+
     if (!canchas.length) {
       await conn.rollback();
       return badRequest(res, "Cancha inexistente");
     }
+
     const id_sucursal = canchas[0].id_sucursal;
 
-    // Si es ADMIN, verificar que la cancha pertenezca a su sucursal
     if (rol === "ADMIN") {
       const sucAdmin = req.user?.sucursal;
       if (!sucAdmin || sucAdmin !== id_sucursal) {
         await conn.rollback();
-        return conflict(
-          res,
-          "No puedes reservar en una cancha de otra sucursal"
-        );
+        return conflict(res, "No puedes reservar en otra sucursal");
       }
     }
 
-    // 1) Validar sucursal y horario
     const [suc] = await conn.query(
       `SELECT hora_apertura, hora_cierre 
        FROM sucursal 
-       WHERE id_sucursal=? 
-       LIMIT 1`,
+       WHERE id_sucursal = ? LIMIT 1`,
       [id_sucursal]
     );
+
     if (!suc.length) {
       await conn.rollback();
       return badRequest(res, "Sucursal inexistente");
     }
 
-    const fecha = inicio.slice(0, 10); // YYYY-MM-DD
+    const fecha = inicio.slice(0, 10);
     const apertura = `${fecha}T${suc[0].hora_apertura}`;
     const cierre = `${fecha}T${suc[0].hora_cierre}`;
 
-    // inicio < fin y dentro del horario de la sucursal
     const rangoOk = inicio >= apertura && fin <= cierre && inicio < fin;
     if (!rangoOk) {
       await conn.rollback();
-      return conflict(
-        res,
-        "Fuera del horario de apertura o rango inválido para la sucursal"
-      );
+      return conflict(res, "Fuera del horario de apertura");
     }
 
-    // 2) Validar solapamientos en la misma cancha y fecha
     const [overlaps] = await conn.query(
       `SELECT 1
        FROM reserva
@@ -142,38 +161,30 @@ export const crearReserva = async (req, res) => {
        LIMIT 1`,
       [id_cancha, inicio, inicio, fin]
     );
+
     if (overlaps.length) {
       await conn.rollback();
-      return conflict(res, "Horario no disponible (solapado)");
+      return conflict(res, "Horario no disponible");
     }
 
-    // 3) Insertar reserva en estado PENDIENTE
     const [ins] = await conn.query(
       `INSERT INTO reserva
-         (id_sucursal, id_cancha, id_usuario, inicio, fin, estado, precio_total, senia)
+        (id_sucursal, id_cancha, id_usuario, inicio, fin, estado, precio_total, senia)
        VALUES (?, ?, ?, ?, ?, 'PENDIENTE', ?, ?)`,
-      [id_sucursal, id_cancha, id_usuario || null, inicio, fin, precio, senia]
+      [id_sucursal, id_cancha, id_usuario, inicio, fin, precio, senia]
     );
 
     await conn.commit();
+
     return created(res, {
       id_reserva: ins.insertId,
       estado: "PENDIENTE",
       precio_total: precio,
       senia,
     });
+
   } catch (err) {
     await conn.rollback();
-    const msg = String(err?.message || "");
-    if (msg.includes("Fuera del horario")) {
-      return conflict(res, "Fuera del horario de apertura");
-    }
-    if (msg.includes("solapado")) {
-      return conflict(res, "Horario no disponible");
-    }
-    if (msg.includes("Rango inválido")) {
-      return badRequest(res, "Rango inválido");
-    }
     return serverError(res, err);
   } finally {
     conn.release();
@@ -182,12 +193,7 @@ export const crearReserva = async (req, res) => {
 
 /**
  * PATCH /api/reservas/:id/estado
- * body: { estado } con uno de:
- *  'CONFIRMADA','RECHAZADA'
- *
- * - Solo ADMIN
- * - Solo permite cambiar estado de reservas de su sucursal
- * - Solo si la reserva está PENDIENTE
+ * Cambia estado PENDIENTE → CONFIRMADA o RECHAZADA
  */
 export const cambiarEstado = async (req, res) => {
   try {
@@ -195,7 +201,7 @@ export const cambiarEstado = async (req, res) => {
     const rol = req.user?.role || req.user?.rol || null;
 
     if (rol !== "ADMIN") {
-      return badRequest(res, "Solo un ADMIN puede cambiar el estado");
+      return badRequest(res, "Solo ADMIN puede cambiar estado");
     }
     if (!adminSucursal) {
       return badRequest(res, "El ADMIN no tiene sucursal asociada");
@@ -205,43 +211,34 @@ export const cambiarEstado = async (req, res) => {
     const { estado } = req.body || {};
     const permitidos = ["CONFIRMADA", "RECHAZADA"];
 
-    if (!id) return badRequest(res, "id inválido");
+    if (!id) return badRequest(res, "ID inválido");
     if (!permitidos.includes(estado)) {
-      return badRequest(res, "Estado inválido (solo CONFIRMADA o RECHAZADA)");
+      return badRequest(res, "Estado inválido");
     }
 
-    // Verificar que la reserva pertenece a la sucursal del admin y que está PENDIENTE
     const [rows] = await pool.query(
       `SELECT id_sucursal, estado
        FROM reserva 
-       WHERE id_reserva = ? 
-       LIMIT 1`,
+       WHERE id_reserva = ? LIMIT 1`,
       [id]
     );
-    if (!rows.length) {
-      return badRequest(res, "Reserva no encontrada");
-    }
+    if (!rows.length) return badRequest(res, "Reserva no encontrada");
 
     const r = rows[0];
 
     if (r.id_sucursal !== adminSucursal) {
-      return conflict(
-        res,
-        "No puedes modificar reservas de otra sucursal"
-      );
+      return conflict(res, "No puedes modificar reservas de otra sucursal");
     }
 
     if (r.estado !== "PENDIENTE") {
-      return conflict(
-        res,
-        "Solo se pueden confirmar o rechazar reservas PENDIENTES"
-      );
+      return conflict(res, "Solo se pueden modificar reservas PENDIENTES");
     }
 
     await pool.query(`UPDATE reserva SET estado=? WHERE id_reserva=?`, [
       estado,
       id,
     ]);
+
     return ok(res, { id_reserva: id, estado });
   } catch (err) {
     return serverError(res, err);
@@ -250,7 +247,7 @@ export const cambiarEstado = async (req, res) => {
 
 /**
  * GET /api/reservas/mias
- * - Lista reservas del usuario autenticado (JUGADOR o ADMIN)
+ * Lista reservas del usuario logueado
  */
 export const listarMisReservas = async (req, res) => {
   try {
@@ -283,11 +280,7 @@ export const listarMisReservas = async (req, res) => {
 
 /**
  * GET /api/reservas/sucursal
- * - ADMIN: lista reservas de su sucursal
- *   Opcional: filtrar por estado y/o fecha (YYYY-MM-DD)
- *   Query params:
- *     - estado (opcional)
- *     - fecha  (opcional, YYYY-MM-DD)
+ * ADMIN: reservas de su sucursal (filtros opcionales)
  */
 export const listarReservasDeMiSucursal = async (req, res) => {
   try {
@@ -298,7 +291,7 @@ export const listarReservasDeMiSucursal = async (req, res) => {
       return badRequest(res, "Solo ADMIN puede ver reservas de su sucursal");
     }
     if (!sucursalId) {
-      return badRequest(res, "El ADMIN no tiene sucursal asociada");
+      return badRequest(res, "ADMIN sin sucursal asociada");
     }
 
     const { estado, fecha } = req.query || {};
@@ -314,7 +307,7 @@ export const listarReservasDeMiSucursal = async (req, res) => {
       params.push(fecha);
     }
 
-    const where = filtros.length ? `WHERE ${filtros.join(" AND ")}` : "";
+    const where = `WHERE ${filtros.join(" AND ")}`;
 
     const [rows] = await pool.query(
       `SELECT 
@@ -344,20 +337,14 @@ export const listarReservasDeMiSucursal = async (req, res) => {
 
 /**
  * GET /api/reservas/admin
- * - SUPERADMIN: ver todas las reservas de todas las sucursales
- *   Query params:
- *     - sucursalId (opcional)
- *     - estado     (opcional)
- *     - fecha      (opcional, YYYY-MM-DD)
+ * SUPERADMIN: reservas globales
  */
 export const listarReservasGlobal = async (req, res) => {
   try {
     const rol = req.user?.role || req.user?.rol || null;
+
     if (rol !== "SUPERADMIN") {
-      return badRequest(
-        res,
-        "Solo SUPERADMIN puede ver el listado global de reservas"
-      );
+      return badRequest(res, "Solo SUPERADMIN puede ver reservas globales");
     }
 
     const { sucursalId, estado, fecha } = req.query || {};
@@ -387,10 +374,10 @@ export const listarReservasGlobal = async (req, res) => {
           r.estado,
           r.precio_total,
           r.senia,
-          c.nombre      AS cancha,
-          s.nombre      AS sucursal,
-          u.username    AS usuario,
-          u.email       AS email_usuario
+          c.nombre AS cancha,
+          s.nombre AS sucursal,
+          u.username AS usuario,
+          u.email AS email_usuario
        FROM reserva r
        JOIN cancha   c ON r.id_cancha = c.id_cancha
        JOIN sucursal s ON r.id_sucursal = s.id_sucursal

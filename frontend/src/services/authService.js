@@ -2,9 +2,7 @@ import api from "../api";
 import { jwtDecode } from "jwt-decode";
 
 // REGISTRO
-// payload = { nombre, dni, username, email, telefono, password }
 export async function register(payload) {
- 
   const res = await api.post("/auth/register", payload);
 
   const body = res.data || {};
@@ -18,7 +16,6 @@ export async function register(payload) {
 }
 
 // LOGIN
-// Devuelve { token, user, decoded }
 export async function login({ username, password }) {
   const res = await api.post("/auth/login", { username, password });
 
@@ -35,12 +32,11 @@ export async function login({ username, password }) {
 
   const userFromApi = payloadRes.user || {};
 
-  // 🔹 Normalizamos SIEMPRE el rol a "role" y MAYÚSCULAS
   const normalizedRole = (
     userFromApi.role ||
-    userFromApi.rol ||        // por si el back manda "rol"
-    decoded.role ||           // por si viene en el token
-    decoded.rol ||            // idem
+    userFromApi.rol ||
+    decoded.role ||
+    decoded.rol ||
     ""
   ).toUpperCase();
 
@@ -48,8 +44,8 @@ export async function login({ username, password }) {
     id: userFromApi.id ?? decoded.id,
     username: userFromApi.username ?? decoded.username,
     sucursal: userFromApi.sucursal ?? decoded.sucursal ?? null,
-    ...userFromApi,          // mantenemos otros campos (dni, nombre, etc.)
-    role: normalizedRole,   
+    ...userFromApi,
+    role: normalizedRole,
   };
 
   return {

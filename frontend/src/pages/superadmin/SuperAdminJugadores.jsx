@@ -122,19 +122,20 @@ export default function SuperAdminJugadores() {
                     <td>{j.dni}</td>
                     <td>{j.activo ? "Sí" : "No"}</td>
                     <td>
-                      <button
-                        className="dashboard-btn-edit"
-                        onClick={() => abrirEditar(j)}
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        className="dashboard-btn-delete"
-                        onClick={() => eliminar(j)}
-                      >
-                        🗑️
-                      </button>
-                    </td>
+  <button
+    className="btn-accion editar"
+    onClick={() => handleEditar(jugador)}
+  >
+    Modificar
+  </button>
+
+  <button
+    className="btn-accion eliminar"
+    onClick={() => handleEliminar(jugador)}
+  >
+    Eliminar
+  </button>
+</td>
                   </tr>
                 ))}
               </tbody>

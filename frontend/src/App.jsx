@@ -7,23 +7,41 @@ import {
 } from "react-router-dom";
 import { useContext } from "react";
 
+import "./styles/App.css";
+import { AuthProvider, AuthContext } from "./context/AuthContext";
+
+/* ========================================= */
+/*                PUBLIC PAGES               */
+/* ========================================= */
 import Home from "./pages/Home";
 import Menu from "./pages/Menu";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+
+/* ========================================= */
+/*                 JUGADOR                   */
+/* ========================================= */
 import Reservas from "./pages/Reservas";
+import ElegirSucursal from "./pages/jugador/ElegirSucursal";
+import ElegirCancha from "./pages/jugador/ElegirCancha";
+import ElegirFecha from "./pages/jugador/ElegirFecha";
+import ElegirHorario from "./pages/jugador/ElegirHorario";
+import Confirmacion from "./pages/jugador/Confirmacion";
+import Perfil from "./pages/Perfil";
+import EditarPerfil from "./pages/EditarPerfil";
 
-import "./styles/App.css";
-
-import { AuthProvider, AuthContext } from "./context/AuthContext";
-
-// ADMIN
+/* ========================================= */
+/*                    ADMIN                  */
+/* ========================================= */
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminReservas from "./pages/admin/AdminReservas";
+import AdminReservasPanel from "./pages/AdminReservasPanel";
 import AdminCanchas from "./pages/admin/AdminCanchas";
 import AdminPagos from "./pages/admin/AdminPagos";
 
-// SUPERADMIN
+/* ========================================= */
+/*                 SUPERADMIN                */
+/* ========================================= */
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 import SuperAdminSucursales from "./pages/superadmin/SuperAdminSucursales";
 import SuperAdminReservas from "./pages/superadmin/SuperAdminReservas";
@@ -31,12 +49,15 @@ import SuperAdminPagos from "./pages/superadmin/SuperAdminPagos";
 import SuperAdminJugadores from "./pages/superadmin/SuperAdminJugadores";
 import SuperAdminAdmins from "./pages/superadmin/SuperAdminAdmins";
 
-// -------------------------------
-//   USUARIO LOGUEADO
-// -------------------------------
+/* ========================================= */
+/*              AUTH PROTECTIONS             */
+/* ========================================= */
+
 function RequireAuth({ children }) {
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
   const location = useLocation();
+
+  if (loading) return <div>Cargando...</div>;
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
@@ -45,16 +66,11 @@ function RequireAuth({ children }) {
   return children;
 }
 
-// -------------------------------
-//   RESTRINGIR POR ROL
-// -------------------------------
 function RequireRole({ roles, children }) {
   const { user } = useContext(AuthContext);
   const location = useLocation();
 
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
+  if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
 
   const userRole = (user.role || "").toUpperCase();
   const allowed = roles.map((r) => r.toUpperCase());
@@ -66,6 +82,10 @@ function RequireRole({ roles, children }) {
   return children;
 }
 
+/* ========================================= */
+/*                ROUTING TABLE              */
+/* ========================================= */
+
 function AppRoutes() {
   const { user } = useContext(AuthContext);
 
@@ -73,19 +93,17 @@ function AppRoutes() {
     if (!user) return "/login";
 
     const role = (user.role || "").toUpperCase();
-
     if (role === "SUPERADMIN") return "/superadmin/dashboard";
     if (role === "ADMIN") return "/admin/dashboard";
-
     return "/home"; // jugador
   };
 
   return (
     <Routes>
-      {/* Landing */}
+      {/* PUBLIC */}
       <Route path="/" element={<Home />} />
 
-      {/* Usuario logueado (jugador) */}
+      {/* JUGADOR */}
       <Route
         path="/home"
         element={
@@ -96,6 +114,24 @@ function AppRoutes() {
       />
 
       <Route
+        path="/perfil"
+        element={
+          <RequireAuth>
+            <Perfil />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+  path="/perfil/editar"
+  element={
+    <RequireAuth>
+      <EditarPerfil />
+    </RequireAuth>
+  }
+/>
+
+      <Route
         path="/reservas"
         element={
           <RequireAuth>
@@ -104,9 +140,53 @@ function AppRoutes() {
         }
       />
 
-      {/* ---------------------- */}
-      {/*       ADMIN           */}
-      {/* ---------------------- */}
+      {/* ========== FLUJO JUGADOR ========== */}
+      <Route
+        path="/reservar"
+        element={
+          <RequireAuth>
+            <ElegirSucursal />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/reservar/:sucursalId/canchas"
+        element={
+          <RequireAuth>
+            <ElegirCancha />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/reservar/:sucursalId/:canchaId/fecha"
+        element={
+          <RequireAuth>
+            <ElegirFecha />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/reservar/:sucursalId/:canchaId/:fecha/horarios"
+        element={
+          <RequireAuth>
+            <ElegirHorario />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/reservar/confirmacion"
+        element={
+          <RequireAuth>
+            <Confirmacion />
+          </RequireAuth>
+        }
+      />
+
+      {/* ADMIN */}
       <Route
         path="/admin/dashboard"
         element={
@@ -121,6 +201,15 @@ function AppRoutes() {
         element={
           <RequireRole roles={["ADMIN"]}>
             <AdminReservas />
+          </RequireRole>
+        }
+      />
+
+      <Route
+        path="/admin/reservas/panel"
+        element={
+          <RequireRole roles={["ADMIN"]}>
+            <AdminReservasPanel />
           </RequireRole>
         }
       />
@@ -143,9 +232,7 @@ function AppRoutes() {
         }
       />
 
-      {/* ---------------------- */}
-      {/*     SUPERADMIN        */}
-      {/* ---------------------- */}
+      {/* SUPERADMIN */}
       <Route
         path="/superadmin/dashboard"
         element={
@@ -183,17 +270,6 @@ function AppRoutes() {
       />
 
       <Route
-  path="/superadmin/admins"
-  element={
-    <RequireRole roles={["SUPERADMIN"]}>
-      <SuperAdminAdmins />
-    </RequireRole>
-  }
-/>
-
-
-      {/* NUEVA RUTA → JUGADORES */}
-      <Route
         path="/superadmin/jugadores"
         element={
           <RequireRole roles={["SUPERADMIN"]}>
@@ -202,9 +278,16 @@ function AppRoutes() {
         }
       />
 
-      {/* ---------------------- */}
-      {/*       LOGIN/REG        */}
-      {/* ---------------------- */}
+      <Route
+        path="/superadmin/admins"
+        element={
+          <RequireRole roles={["SUPERADMIN"]}>
+            <SuperAdminAdmins />
+          </RequireRole>
+        }
+      />
+
+      {/* LOGIN & REGISTER */}
       <Route
         path="/login"
         element={
@@ -223,7 +306,7 @@ function AppRoutes() {
         }
       />
 
-      {/* Catch-all */}
+      {/* 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
@@ -240,4 +323,3 @@ function App() {
 }
 
 export default App;
-

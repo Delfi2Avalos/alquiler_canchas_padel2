@@ -11,22 +11,12 @@ import {
 /**
  * POST /api/pagos
  * JUGADOR o ADMIN registran un pago (comprobante)
- *
- * Tabla pago asumida:
- *  - id_pago (PK)
- *  - id_reserva (FK)
- *  - fecha
- *  - monto
- *  - metodo
- *  - estado  (PENDIENTE / VERIFICADO / RECHAZADO)
- *  - referencia (opcional)
  */
 export const crearPago = asyncHandler(async (req, res) => {
   const { id_reserva, monto, metodo, referencia } = req.body || {};
   const rol = req.user?.role || req.user?.rol || null;
   const adminSucursal = req.user?.sucursal || null;
 
-  // Validaciones básicas
   if (!id_reserva || !monto) {
     return badRequest(res, "id_reserva y monto son obligatorios");
   }
@@ -36,7 +26,6 @@ export const crearPago = asyncHandler(async (req, res) => {
     return badRequest(res, "Monto inválido");
   }
 
-  // Traemos la reserva para validar que exista y obtener la sucursal
   const [resv] = await pool.query(
     `
     SELECT r.id_reserva, r.id_sucursal
@@ -53,7 +42,6 @@ export const crearPago = asyncHandler(async (req, res) => {
 
   const reservaSucursal = resv[0].id_sucursal;
 
-  // Si es ADMIN, solo puede cargar pagos de SU sucursal
   if (rol === "ADMIN" && adminSucursal && adminSucursal !== reservaSucursal) {
     return conflict(
       res,
@@ -61,18 +49,18 @@ export const crearPago = asyncHandler(async (req, res) => {
     );
   }
 
-  // Insertamos el pago como PENDIENTE
+  // Insertamos usando comprobante_subido_en
   const [ins] = await pool.query(
     `
     INSERT INTO pago (
       id_reserva,
-      fecha,
       monto,
       metodo,
       estado,
-      referencia
+      referencia,
+      comprobante_subido_en
     )
-    VALUES (?, NOW(), ?, ?, 'PENDIENTE', ?)
+    VALUES (?, ?, ?, 'PENDIENTE', ?, NOW())
   `,
     [id_reserva, montoNum, metodo || null, referencia || null]
   );
@@ -85,8 +73,6 @@ export const crearPago = asyncHandler(async (req, res) => {
 
 /**
  * PATCH /api/pagos/:id/estado
- * Solo ADMIN puede cambiar el estado del pago de su sucursal
- * body: { estado } -> PENDIENTE | VERIFICADO | RECHAZADO
  */
 export const cambiarEstadoPago = asyncHandler(async (req, res) => {
   const rol = req.user?.role || req.user?.rol || null;
@@ -108,7 +94,6 @@ export const cambiarEstadoPago = asyncHandler(async (req, res) => {
     return badRequest(res, "Estado de pago inválido");
   }
 
-  // Verifico que el pago pertenezca a la sucursal del admin
   const [rows] = await pool.query(
     `
     SELECT p.id_pago, r.id_sucursal
@@ -145,10 +130,7 @@ export const cambiarEstadoPago = asyncHandler(async (req, res) => {
 
 /**
  * GET /api/pagos/sucursal
- * ADMIN ― ve los pagos de SU sucursal
- * query params opcionales:
- *  - estado  (PENDIENTE / VERIFICADO / RECHAZADO)
- *  - fecha   (YYYY-MM-DD)
+ * ADMIN ve pagos de SU sucursal
  */
 export const listarPagosSucursal = asyncHandler(async (req, res) => {
   const rol = req.user?.role || req.user?.rol || null;
@@ -172,7 +154,7 @@ export const listarPagosSucursal = asyncHandler(async (req, res) => {
   }
 
   if (fecha) {
-    filtros.push("DATE(p.fecha) = DATE(?)");
+    filtros.push("DATE(p.comprobante_subido_en) = DATE(?)");
     params.push(fecha);
   }
 
@@ -182,7 +164,7 @@ export const listarPagosSucursal = asyncHandler(async (req, res) => {
     `
     SELECT 
       p.id_pago,
-      p.fecha,
+      p.comprobante_subido_en AS fecha,
       p.monto,
       p.metodo,
       p.estado,
@@ -193,7 +175,7 @@ export const listarPagosSucursal = asyncHandler(async (req, res) => {
     JOIN cancha  c ON c.id_cancha = r.id_cancha
     JOIN usuario u ON u.id_usuario = r.id_usuario
     ${where}
-    ORDER BY p.fecha DESC
+    ORDER BY p.comprobante_subido_en DESC
   `,
     params
   );
@@ -203,11 +185,7 @@ export const listarPagosSucursal = asyncHandler(async (req, res) => {
 
 /**
  * GET /api/pagos/admin
- * SUPERADMIN ― ve pagos de todas las sucursales
- * query params opcionales:
- *  - sucursalId
- *  - estado
- *  - fecha (YYYY-MM-DD)
+ * SUPERADMIN ve TODOS los pagos
  */
 export const listarPagosGlobal = asyncHandler(async (req, res) => {
   const rol = req.user?.role || req.user?.rol || null;
@@ -228,13 +206,13 @@ export const listarPagosGlobal = asyncHandler(async (req, res) => {
     params.push(Number(sucursalId));
   }
 
-  if (estado) {
+  if (Estado) {
     filtros.push("p.estado = ?");
     params.push(String(estado).toUpperCase());
   }
 
   if (fecha) {
-    filtros.push("DATE(p.fecha) = DATE(?)");
+    filtros.push("DATE(p.comprobante_subido_en) = DATE(?)");
     params.push(fecha);
   }
 
@@ -244,7 +222,7 @@ export const listarPagosGlobal = asyncHandler(async (req, res) => {
     `
     SELECT 
       p.id_pago,
-      p.fecha,
+      p.comprobante_subido_en AS fecha,
       p.monto,
       p.metodo,
       p.estado,
@@ -257,7 +235,7 @@ export const listarPagosGlobal = asyncHandler(async (req, res) => {
     JOIN cancha   c ON c.id_cancha   = r.id_cancha
     JOIN usuario  u ON u.id_usuario  = r.id_usuario
     ${where}
-    ORDER BY p.fecha DESC
+    ORDER BY p.comprobante_subido_en DESC
   `,
     params
   );

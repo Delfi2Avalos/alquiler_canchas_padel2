@@ -1,22 +1,65 @@
-import axios from "axios";
-import jwtDecode from "jwt-decode";
+import api from "../api";
+import { jwtDecode } from "jwt-decode";
 
-const api = axios.create({
-  baseURL: "https://localhost:7021/api", // Cambia según tu API
-});
+// REGISTRO
+// payload = { nombre, dni, username, email, telefono, password }
+export async function register(payload) {
+ 
+  const res = await api.post("/auth/register", payload);
 
-export async function loginUser(credentials) {
-  const response = await api.post("/auth/login", credentials);
-  const token = response.data.token;
-  localStorage.setItem("token", token);
-  return jwtDecode(token);
+  const body = res.data || {};
+  const payloadRes = body.data || body;
+
+  if (payloadRes?.token) {
+    localStorage.setItem("token", payloadRes.token);
+  }
+
+  return payloadRes;
 }
 
-export async function registerUser(data) {
-  return await api.post("/auth/register", data);
+// LOGIN
+// Devuelve { token, user, decoded }
+export async function login({ username, password }) {
+  const res = await api.post("/auth/login", { username, password });
+
+  const body = res.data || {};
+  const payloadRes = body.data || body;
+
+  if (!payloadRes?.token) {
+    throw new Error("Respuesta inválida del servidor (sin token)");
+  }
+
+  localStorage.setItem("token", payloadRes.token);
+
+  const decoded = jwtDecode(payloadRes.token);
+
+  const userFromApi = payloadRes.user || {};
+
+  // 🔹 Normalizamos SIEMPRE el rol a "role" y MAYÚSCULAS
+  const normalizedRole = (
+    userFromApi.role ||
+    userFromApi.rol ||
+    decoded.role ||
+    decoded.rol ||
+    ""
+  ).toUpperCase();
+
+  const user = {
+    id: userFromApi.id ?? decoded.id,
+    username: userFromApi.username ?? decoded.username,
+    sucursal: userFromApi.sucursal ?? decoded.sucursal ?? null,
+    ...userFromApi,
+    role: normalizedRole,
+  };
+
+  return {
+    token: payloadRes.token,
+    user,
+    decoded,
+  };
 }
 
-export function authLogout() {
+// LOGOUT
+export function logout() {
   localStorage.removeItem("token");
-  localStorage.removeItem("user");
 }

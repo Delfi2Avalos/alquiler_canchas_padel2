@@ -414,13 +414,13 @@ export default function SuperAdminDashboard() {
                             className="dashboard-btn-edit"
                             onClick={() => abrirEditar(j)}
                           >
-                            ✏️
+                            Modificar
                           </button>
                           <button
                             className="dashboard-btn-delete"
                             onClick={() => eliminarJugador(j)}
                           >
-                            🗑️
+                            Eliminar
                           </button>
                         </td>
                       </tr>

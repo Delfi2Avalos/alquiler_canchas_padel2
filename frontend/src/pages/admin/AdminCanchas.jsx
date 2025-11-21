@@ -196,14 +196,14 @@ export default function AdminCanchas() {
                         className="dashboard-btn-edit"
                         onClick={() => openEditModal(c)}
                       >
-                        ✏️
+                        Modificar
                       </button>
 
                       <button
                         className="dashboard-btn-delete"
                         onClick={() => deleteCancha(c.id_cancha)}
                       >
-                        🗑️
+                        Eliminar
                       </button>
                     </td>
                   </tr>

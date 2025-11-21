@@ -313,3 +313,119 @@ body {
   opacity: 0.8;
   background: rgba(0, 0, 0, 0.3);
 }
+
+/* ----------- HORARIOS RESERVA ----------- */
+.grid-horarios {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.celda-horario {
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.celda-horario.libre {
+  background: #2ecc71;
+  color: #fff;
+}
+
+.celda-horario.ocupado {
+  background: #e74c3c;
+  color: #fff;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.celda-horario.seleccionado {
+  outline: 3px solid #34495e;
+}
+
+.btn-confirmar {
+  margin-top: 15px;
+  padding: 10px;
+  background: #3498db;
+  color: white;
+  border: none;
+  width: 100%;
+  border-radius: 6px;
+}
+
+/* ----------- TARJETAS DE RESERVAS (Mis Reservas / Admin) ----------- */
+.reserva-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.estado-pendiente {
+  color: #f1c40f; /* amarillo */
+}
+
+.estado-confirmada {
+  color: #2ecc71; /* verde */
+}
+
+.estado-rechazada {
+  color: #e74c3c; /* rojo */
+}
+
+/* ----------- ADMIN RESERVAS ----------- */
+.admin-container {
+  padding: 20px;
+  color: #333;
+}
+
+.filtros {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+.btn-confirmar {
+  background: #2ecc71;
+  border: none;
+  padding: 5px 10px;
+  color: white;
+  border-radius: 4px;
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+.btn-rechazar {
+  background: #e74c3c;
+  border: none;
+  padding: 5px 10px;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.estado-pendiente {
+  color: #f1c40f;
+}
+
+.estado-confirmada {
+  color: #2ecc71;
+}
+
+.estado-rechazada {
+  color: #e74c3c;
+}

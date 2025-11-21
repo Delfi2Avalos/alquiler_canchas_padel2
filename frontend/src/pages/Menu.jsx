@@ -1,47 +1,61 @@
 import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+
 import "../styles/App.css";
+import "../styles/jugador.css";
 
 export default function Menu() {
   const navigate = useNavigate();
+  const { logout } = useContext(AuthContext);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    logout();          // <-- Limpia token, user y estado global
     navigate("/login");
   };
 
   return (
-    <div className="menu-container">
-      {/* Fondo con imagen */}
-      <div className="menu-overlay"></div>
+    <div className="menu-container jugador-home">
 
-      {/* Barra superior */}
-      <nav className="menu-navbar">
+      {/* NAVBAR */}
+      <nav className="menu-navbar jugador-navbar">
         <h2 className="menu-title">Sistema de Reservas</h2>
+
         <div className="menu-links">
-          <button onClick={() => navigate("/reservas")} className="menu-btn">
-            Reservas
+          <button onClick={() => navigate("/reservar")} className="menu-btn">
+            Reservar cancha
           </button>
+
+          <button onClick={() => navigate("/reservas")} className="menu-btn">
+            Mis reservas
+          </button>
+
           <button onClick={() => navigate("/perfil")} className="menu-btn">
             Perfil
           </button>
+
           <button onClick={handleLogout} className="menu-btn logout">
             Cerrar sesión
           </button>
         </div>
       </nav>
 
-      {/* Contenido central */}
-      <div className="menu-content">
-        <h1 className="menu-heading">¡Bienvenido al sistema de reservas de pádel!</h1>
-        <p className="menu-subtext">
-          Gestioná tus reservas, consultá tus turnos y disfrutá del mejor pádel con nosotros.
+      {/* CONTENIDO CENTRAL */}
+      <div className="menu-content jugador-welcome-box">
+        <h1>¡Bienvenido!</h1>
+
+        <p className="jugador-sub">
+          Elegí tu sucursal, seleccioná cancha y reservá tu turno al instante.
         </p>
 
-        <button className="start-btn" onClick={() => navigate("/reservas")}>
+        <button
+          className="start-btn jugador-start-btn"
+          onClick={() => navigate("/reservar")}
+        >
           Hacer una reserva
         </button>
       </div>
     </div>
   );
 }
+

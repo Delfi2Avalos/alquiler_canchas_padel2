@@ -1,0 +1,38 @@
+.grid-horarios {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.celda-horario {
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.celda-horario.libre {
+  background: #2ecc71;
+  color: white;
+}
+
+.celda-horario.ocupado {
+  background: #e74c3c;
+  color: white;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.celda-horario.seleccionado {
+  outline: 3px solid #34495e;
+}
+
+.btn-confirmar {
+  margin-top: 15px;
+  padding: 10px;
+  background: #3498db;
+  color: white;
+  border: none;
+  width: 100%;
+  border-radius: 6px;
+}

@@ -13,6 +13,7 @@ import sucursalesRoutes from "./routes/sucursales.routes.js";
 import superAdminRoutes from "./routes/superadmin.routes.js";
 import adminsRoutes from "./routes/admins.routes.js";
 import jugadoresRoutes from "./routes/jugadores.routes.js";
+import usuariosRoutes from "./routes/usuarios.routes.js";
 
 dotenv.config();
 const app = express();
@@ -71,6 +72,7 @@ app.use("/api/sucursales", sucursalesRoutes);
 app.use("/api/superadmin", superAdminRoutes);
 app.use("/api/admins", adminsRoutes);
 app.use("/api/jugadores", jugadoresRoutes);
+app.use("/api/usuario", usuariosRoutes);
 
 //  Test DB
 app.get("/api/db-check", async (_req, res) => {

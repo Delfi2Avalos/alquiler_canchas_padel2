@@ -25,18 +25,30 @@ export default function ConfirmacionReserva() {
 
   const enviarSolicitud = async () => {
     try {
-      const res = await api.post("/reservas", {
-        id_sucursal: sucursalId,
+
+      // FORMATO ISO QUE EL BACKEND EXIGE
+      const inicio = `${fecha}T${horaInicio}`;
+      const fin = `${fecha}T${horaFin}`;
+
+      console.log("DEBUG → ENVIANDO:", {
         id_cancha: canchaId,
-        fecha: fecha,
-        hora_inicio: horaInicio,
-        hora_fin: horaFin,
+        inicio,
+        fin,
+        precio_total: 0
+      });
+
+      const res = await api.post("/reservas", {
+        id_cancha: canchaId,
+        inicio,
+        fin,
+        precio_total: 0  // YA NO USÁS PAGO → LO MANDO EN 0
       });
 
       alert("Solicitud enviada con éxito");
       navigate("/home");
+
     } catch (error) {
-      console.error(error);
+      console.error("ERROR RESERVA:", error.response?.data || error);
       alert("Error al enviar la solicitud");
     }
   };

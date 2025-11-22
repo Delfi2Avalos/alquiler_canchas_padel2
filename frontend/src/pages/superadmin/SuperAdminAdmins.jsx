@@ -243,14 +243,14 @@ export default function SuperAdminAdmins() {
                           className="dashboard-btn-edit"
                           onClick={() => openEditModal(a)}
                         >
-                          ✏️
+                          Modificar
                         </button>
 
                         <button
                           className="dashboard-btn-delete"
                           onClick={() => deleteAdmin(a.id_usuario)}
                         >
-                          🗑️
+                          Eliminar
                         </button>
                       </td>
                     </tr>

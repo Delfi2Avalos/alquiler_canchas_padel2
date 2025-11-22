@@ -216,14 +216,14 @@ export default function SuperAdminSucursales() {
                         className="dashboard-btn-edit"
                         onClick={() => openEditModal(s)}
                       >
-                        ✏️
+                        Modificar
                       </button>
 
                       <button
                         className="dashboard-btn-delete"
                         onClick={() => deleteSucursal(s.id_sucursal)}
                       >
-                        🗑️
+                        Eliminar
                       </button>
                     </td>
                   </tr>

@@ -8,25 +8,25 @@ export default function AdminDashboard() {
   const { logout } = useContext(AuthContext);
 
   const handleLogout = () => {
-    logout();              // limpia user + token
-    navigate("/login");    // vuelve al login
+    logout();           // limpia user + token
+    navigate("/login"); // vuelve al login
   };
 
   return (
     <div className="admin-dashboard">
       {/* Título + botón cerrar sesión */}
-      <div className="admin-header" style={{ 
-        display: "flex", 
-        justifyContent: "space-between", 
-        alignItems: "center",
-        marginBottom: "1.5rem"
-      }}>
+      <div
+        className="admin-header"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "1.5rem",
+        }}
+      >
         <h1>Panel del Administrador</h1>
 
-        <button
-          className="admin-btn logout"
-          onClick={handleLogout}
-        >
+        <button className="admin-btn logout" onClick={handleLogout}>
           Cerrar sesión
         </button>
       </div>
@@ -55,7 +55,8 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {/* PAGOS */}
+      {/* 
+       PAGOS (OCULTO — NO SE MUESTRA)
       <div className="admin-section">
         <h2>Pagos</h2>
         <p>Verificá comprobantes y actualizá el estado de los pagos.</p>
@@ -64,6 +65,21 @@ export default function AdminDashboard() {
           onClick={() => navigate("/admin/pagos")}
         >
           Ver pagos
+        </button>
+      </div>
+      */}
+
+      {/* 📊 REPORTES */}
+      <div className="admin-section">
+        <h2>Reportes</h2>
+        <p>
+          Consultá canchas más reservadas y análisis de horarios (usados y vacíos).
+        </p>
+        <button
+          className="admin-btn"
+          onClick={() => navigate("/admin/reportes")}
+        >
+          Ver reportes
         </button>
       </div>
     </div>

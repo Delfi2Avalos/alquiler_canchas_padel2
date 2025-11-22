@@ -36,7 +36,7 @@ export default function SuperAdminDashboard() {
 
   const [loading, setLoading] = useState(true);
 
-  // ---------- helpers de formato ----------
+  // ---------- helpers ----------
   const formatearFecha = (iso) => {
     if (!iso) return "-";
     const [y, m, d] = iso.slice(0, 10).split("-");
@@ -50,18 +50,14 @@ export default function SuperAdminDashboard() {
     return `${h1} - ${h2}`;
   };
 
-  // ---------- lectura de arrays según formatos típicos ----------
   const asArray = (res, keyPreferida) => {
     if (!res || !res.data) return [];
     const d = res.data;
 
-    if (Array.isArray(d)) return d; // respuesta = [...]
-
+    if (Array.isArray(d)) return d;
     if (keyPreferida && Array.isArray(d[keyPreferida])) return d[keyPreferida];
-
     if (Array.isArray(d.data)) return d.data;
 
-    // buscar la primera propiedad que sea array
     for (const v of Object.values(d)) {
       if (Array.isArray(v)) return v;
     }
@@ -79,17 +75,13 @@ export default function SuperAdminDashboard() {
         api.get("/admins"),
         api.get("/reservas/admin"),
         api.get("/jugadores").catch((e) => {
-          // si /jugadores da 500, no tiramos abajo todo el dashboard
           console.error("Error en /api/jugadores:", e?.response?.data || e);
           return null;
         }),
       ]);
 
-      // sucursales: suele ser { ok, data: [...] }
       const sucursales = asArray(sucRes, "sucursales");
-      // admins: suele ser { ok, admins: [...] }
       const admins = asArray(adminsRes, "admins");
-      // reservas: suele ser { ok, data: [...] } o { ok, reservas: [...] }
       const reservas = asArray(reservasRes, "reservas");
 
       setStats({
@@ -103,12 +95,11 @@ export default function SuperAdminDashboard() {
         .slice(0, 5);
       setUltimasReservas(ultimas);
 
-      // jugadores (si el endpoint falló, jugRes será null → dejamos vacío)
       const jugadoresList = jugRes ? asArray(jugRes, "jugadores") : [];
       setJugadores(jugadoresList);
       setListaFiltrada(jugadoresList);
     } catch (err) {
-      console.error("Error al cargar datos del panel superadmin:", err);
+      console.error("Error al cargar datos:", err);
       setStats({
         sucursalesActivas: 0,
         adminsActivos: 0,
@@ -132,13 +123,10 @@ export default function SuperAdminDashboard() {
     const t = texto.toLowerCase();
 
     const filtrados = jugadores.filter((j) => {
-      const nombre = (j.nombre || "").toLowerCase();
-      const user = (j.username || "").toLowerCase();
-      const email = (j.email || "").toLowerCase();
       return (
-        nombre.includes(t) ||
-        user.includes(t) ||
-        email.includes(t)
+        (j.nombre || "").toLowerCase().includes(t) ||
+        (j.username || "").toLowerCase().includes(t) ||
+        (j.email || "").toLowerCase().includes(t)
       );
     });
 
@@ -151,7 +139,7 @@ export default function SuperAdminDashboard() {
     navigate("/login");
   };
 
-  // ---------- edición / borrado jugadores ----------
+  // ---------- editar jugador ----------
   const abrirEditar = (j) => {
     setEditJugador(j);
     setForm({
@@ -203,7 +191,6 @@ export default function SuperAdminDashboard() {
       <div className="dashboard-overlay" />
 
       <main className="dashboard-content">
-        {/* Header + logout */}
         <header className="dashboard-header">
           <div
             style={{
@@ -222,7 +209,6 @@ export default function SuperAdminDashboard() {
 
             <button
               className="dashboard-logout-button"
-              type="button"
               onClick={handleLogout}
             >
               Cerrar sesión
@@ -236,22 +222,20 @@ export default function SuperAdminDashboard() {
           <>
             {/* Tarjetas superiores */}
             <section className="dashboard-grid">
-              {/* Sucursales */}
+
               <article className="dashboard-card">
                 <div className="dashboard-card-header">
                   <div className="dashboard-card-icon">🏟️</div>
                   <h2 className="dashboard-card-title">Sucursales</h2>
                 </div>
                 <p className="dashboard-card-text">
-                  Gestioná todas las sedes del complejo de pádel.
+                  Gestioná todas las sedes del complejo.
                 </p>
                 <div className="dashboard-card-info">
                   <span className="dashboard-card-number">
                     {stats.sucursalesActivas}
                   </span>
-                  <span className="dashboard-card-label">
-                    sucursales activas
-                  </span>
+                  <span className="dashboard-card-label">activas</span>
                 </div>
                 <button
                   className="dashboard-card-button"
@@ -261,20 +245,19 @@ export default function SuperAdminDashboard() {
                 </button>
               </article>
 
-              {/* Administradores */}
               <article className="dashboard-card">
                 <div className="dashboard-card-header">
                   <div className="dashboard-card-icon">👤</div>
                   <h2 className="dashboard-card-title">Administradores</h2>
                 </div>
                 <p className="dashboard-card-text">
-                  Creá y gestioná admins asignados a sucursales.
+                  Creá y gestioná los administradores.
                 </p>
                 <div className="dashboard-card-info">
                   <span className="dashboard-card-number">
                     {stats.adminsActivos}
                   </span>
-                  <span className="dashboard-card-label">admins activos</span>
+                  <span className="dashboard-card-label">activos</span>
                 </div>
                 <button
                   className="dashboard-card-button"
@@ -284,22 +267,19 @@ export default function SuperAdminDashboard() {
                 </button>
               </article>
 
-              {/* Reservas (total) */}
               <article className="dashboard-card">
                 <div className="dashboard-card-header">
                   <div className="dashboard-card-icon">📅</div>
                   <h2 className="dashboard-card-title">Reservas</h2>
                 </div>
                 <p className="dashboard-card-text">
-                  Visualizá todas las reservas globales del sistema.
+                  Visualizá todas las reservas globales.
                 </p>
                 <div className="dashboard-card-info">
                   <span className="dashboard-card-number">
                     {stats.reservasTotales}
                   </span>
-                  <span className="dashboard-card-label">
-                    reservas totales
-                  </span>
+                  <span className="dashboard-card-label">totales</span>
                 </div>
                 <button
                   className="dashboard-card-button"
@@ -309,26 +289,47 @@ export default function SuperAdminDashboard() {
                 </button>
               </article>
 
-              {/* Pagos */}
+              {/* 🔥 Pagos removido completamente */}
+               {/*
               <article className="dashboard-card">
                 <div className="dashboard-card-header">
                   <div className="dashboard-card-icon">💳</div>
                   <h2 className="dashboard-card-title">Pagos</h2>
                 </div>
                 <p className="dashboard-card-text">
-                  Consultá pagos y comprobantes registrados.
+                  Consultá los pagos registrados.
                 </p>
                 <div className="dashboard-card-info">
                   <span className="dashboard-card-number">-</span>
-                  <span className="dashboard-card-label">
-                    pagos (ver detalle en la sección)
-                  </span>
+                  <span className="dashboard-card-label">pagos</span>
                 </div>
                 <button
                   className="dashboard-card-button"
                   onClick={() => navigate("/superadmin/pagos")}
                 >
                   Ver pagos
+                </button>
+              </article>
+              */}
+
+              {/* REPORTES */}
+              <article className="dashboard-card">
+                <div className="dashboard-card-header">
+                  <div className="dashboard-card-icon">📊</div>
+                  <h2 className="dashboard-card-title">Reportes</h2>
+                </div>
+                <p className="dashboard-card-text">
+                  Generá informes del sistema.
+                </p>
+                <div className="dashboard-card-info">
+                  <span className="dashboard-card-number">+</span>
+                  <span className="dashboard-card-label">opciones</span>
+                </div>
+                <button
+                  className="dashboard-card-button"
+                  onClick={() => navigate("/superadmin/reportes")}
+                >
+                  Ver reportes
                 </button>
               </article>
             </section>
@@ -367,11 +368,10 @@ export default function SuperAdminDashboard() {
               </table>
             </section>
 
-            {/* Jugadores registrados */}
+            {/* Jugadores */}
             <section className="dashboard-section" style={{ marginTop: "20px" }}>
               <h2 className="dashboard-section-title">Jugadores registrados</h2>
 
-              {/* Buscador */}
               <input
                 type="text"
                 placeholder="Buscar por nombre, usuario o email..."

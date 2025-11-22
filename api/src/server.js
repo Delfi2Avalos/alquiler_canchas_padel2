@@ -14,25 +14,23 @@ import superAdminRoutes from "./routes/superadmin.routes.js";
 import adminsRoutes from "./routes/admins.routes.js";
 import jugadoresRoutes from "./routes/jugadores.routes.js";
 import usuariosRoutes from "./routes/usuarios.routes.js";
+import reportesRoutes from "./routes/reportes.routes.js";  
+import notificacionesRoutes from "./routes/notificaciones.routes.js";
 
 dotenv.config();
 const app = express();
 
-
-//  Middleware global
+// Middleware global
 app.use(express.json());
 app.use(morgan("dev"));
 
 // --- CORS configurable por .env ---
-// Ejemplo en .env:
-// CORS_ORIGINS=http://localhost:5173,http://TU_IP:5173,https://tudominio.com
 const rawOrigins = process.env.CORS_ORIGINS || "http://localhost:5173";
-const allowedOrigins = rawOrigins.split(",").map((o) => o.trim());
+const allowedOrigins = rawOrigins.split(",").map(o => o.trim());
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Permitir herramientas tipo Postman (sin origin)
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
@@ -46,8 +44,7 @@ app.use(
   })
 );
 
-
-//  Rutas
+// Rutas
 app.get("/", (_req, res) =>
   res.json({
     ok: true,
@@ -59,6 +56,7 @@ app.get("/", (_req, res) =>
       "/api/reservas",
       "/api/pagos",
       "/api/auth",
+      "/api/reportes"
     ],
   })
 );
@@ -73,8 +71,10 @@ app.use("/api/superadmin", superAdminRoutes);
 app.use("/api/admins", adminsRoutes);
 app.use("/api/jugadores", jugadoresRoutes);
 app.use("/api/usuario", usuariosRoutes);
+app.use("/api/reportes", reportesRoutes);  
+app.use("/api/notificaciones", notificacionesRoutes); 
 
-//  Test DB
+// Test DB
 app.get("/api/db-check", async (_req, res) => {
   try {
     const [rows] = await pool.query("SELECT 1 AS ok");
@@ -84,14 +84,12 @@ app.get("/api/db-check", async (_req, res) => {
   }
 });
 
-
-//  404
+// 404
 app.use((_req, res) =>
   res.status(404).json({ ok: false, msg: "Ruta no encontrada" })
 );
 
-
-//  Manejador de errores
+// Manejador global de errores
 app.use((err, _req, res, _next) => {
   const dev = process.env.NODE_ENV !== "production";
   console.error("Error:", err);
@@ -102,11 +100,10 @@ app.use((err, _req, res, _next) => {
   });
 });
 
-
-//  Inicio del servidor
+// Inicio del servidor
 const PORT = process.env.PORT || 3001;
 
-// IMPORTANTE: "0.0.0.0" para aceptar conexiones desde otras PCs por IP
+// "0.0.0.0" permite accesos desde otras PCs por IP
 const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`API running on port ${PORT}`);
   console.log("CORS_ORIGINS:", allowedOrigins);
@@ -117,8 +114,7 @@ const server = app.listen(PORT, "0.0.0.0", () => {
     .catch((e) => console.error("DB ❌", e.message));
 });
 
-
-//  Cierre prolijo
+// Cierre prolijo
 const shutdown = async (signal) => {
   console.log(`\nRecibido ${signal}. Cerrando servidor...`);
   server.close(async () => {

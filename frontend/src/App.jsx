@@ -29,15 +29,16 @@ import ElegirHorario from "./pages/jugador/ElegirHorario";
 import Confirmacion from "./pages/jugador/Confirmacion";
 import Perfil from "./pages/Perfil";
 import EditarPerfil from "./pages/EditarPerfil";
+import JugadorNotificaciones from "./pages/JugadorNotificaciones";
 
 /* ========================================= */
 /*                    ADMIN                  */
 /* ========================================= */
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminReservas from "./pages/admin/AdminReservas";
-import AdminReservasPanel from "./pages/AdminReservasPanel";
 import AdminCanchas from "./pages/admin/AdminCanchas";
-import AdminPagos from "./pages/admin/AdminPagos";
+// import AdminPagos from "./pages/admin/AdminPagos";  // 🔥 OCULTO
+import AdminReportes from "./pages/admin/AdminReportes";
 
 /* ========================================= */
 /*                 SUPERADMIN                */
@@ -45,9 +46,10 @@ import AdminPagos from "./pages/admin/AdminPagos";
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 import SuperAdminSucursales from "./pages/superadmin/SuperAdminSucursales";
 import SuperAdminReservas from "./pages/superadmin/SuperAdminReservas";
-import SuperAdminPagos from "./pages/superadmin/SuperAdminPagos";
+// import SuperAdminPagos from "./pages/superadmin/SuperAdminPagos"; // 🔥 OCULTO
 import SuperAdminJugadores from "./pages/superadmin/SuperAdminJugadores";
 import SuperAdminAdmins from "./pages/superadmin/SuperAdminAdmins";
+import SuperAdminReportes from "./pages/superadmin/SuperAdminReportes";
 
 /* ========================================= */
 /*              AUTH PROTECTIONS             */
@@ -123,19 +125,29 @@ function AppRoutes() {
       />
 
       <Route
-  path="/perfil/editar"
-  element={
-    <RequireAuth>
-      <EditarPerfil />
-    </RequireAuth>
-  }
-/>
+        path="/perfil/editar"
+        element={
+          <RequireAuth>
+            <EditarPerfil />
+          </RequireAuth>
+        }
+      />
 
       <Route
         path="/reservas"
         element={
           <RequireAuth>
             <Reservas />
+          </RequireAuth>
+        }
+      />
+
+      {/* NOTIFICACIONES */}
+      <Route
+        path="/notificaciones"
+        element={
+          <RequireAuth>
+            <JugadorNotificaciones />
           </RequireAuth>
         }
       />
@@ -206,15 +218,6 @@ function AppRoutes() {
       />
 
       <Route
-        path="/admin/reservas/panel"
-        element={
-          <RequireRole roles={["ADMIN"]}>
-            <AdminReservasPanel />
-          </RequireRole>
-        }
-      />
-
-      <Route
         path="/admin/canchas"
         element={
           <RequireRole roles={["ADMIN"]}>
@@ -223,11 +226,22 @@ function AppRoutes() {
         }
       />
 
+      {/*  PAGOS OCULTOS
       <Route
         path="/admin/pagos"
         element={
           <RequireRole roles={["ADMIN"]}>
             <AdminPagos />
+          </RequireRole>
+        }
+      />
+      */}
+
+      <Route
+        path="/admin/reportes"
+        element={
+          <RequireRole roles={["ADMIN"]}>
+            <AdminReportes />
           </RequireRole>
         }
       />
@@ -260,6 +274,7 @@ function AppRoutes() {
         }
       />
 
+      {/* 🔥 PAGOS OCULTOS
       <Route
         path="/superadmin/pagos"
         element={
@@ -268,6 +283,7 @@ function AppRoutes() {
           </RequireRole>
         }
       />
+      */}
 
       <Route
         path="/superadmin/jugadores"
@@ -283,6 +299,15 @@ function AppRoutes() {
         element={
           <RequireRole roles={["SUPERADMIN"]}>
             <SuperAdminAdmins />
+          </RequireRole>
+        }
+      />
+
+      <Route
+        path="/superadmin/reportes"
+        element={
+          <RequireRole roles={["SUPERADMIN"]}>
+            <SuperAdminReportes />
           </RequireRole>
         }
       />

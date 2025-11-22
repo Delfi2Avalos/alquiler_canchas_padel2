@@ -241,6 +241,17 @@
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
 }
 
+  .modal-container,
+.modal-container label,
+.modal-container select,
+.modal-container input,
+.modal-container textarea {
+  color: #073b3a !important;
+}
+
+
+
+
 .modal-title {
   font-size: 1.6rem;
   font-weight: 700;

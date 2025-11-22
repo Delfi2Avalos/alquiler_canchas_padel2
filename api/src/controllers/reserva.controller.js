@@ -12,10 +12,9 @@ const isISODate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
 const isISODateTime = (s) =>
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(String(s || ""));
 
-/**
- * GET /api/reservas/disponibilidad?canchaId=&fecha=YYYY-MM-DD
- * Devuelve las reservas existentes de un día
- */
+/* ============================================================
+   GET /api/reservas/disponibilidad
+   ============================================================ */
 export const disponibilidad = async (req, res) => {
   try {
     const canchaId = Number(req.query.canchaId);
@@ -39,10 +38,9 @@ export const disponibilidad = async (req, res) => {
   }
 };
 
-/**
- * GET /api/reservas/horarios?canchaId=&fecha=
- * Devuelve horarios LIBRE / OCUPADO
- */
+/* ============================================================
+   GET /api/reservas/horarios
+   ============================================================ */
 export const horariosDisponibles = async (req, res) => {
   try {
     const canchaId = Number(req.query.canchaId);
@@ -83,10 +81,10 @@ export const horariosDisponibles = async (req, res) => {
   }
 };
 
-/**
- * POST /api/reservas
- * Crea una reserva en estado PENDIENTE
- */
+/* ============================================================
+   POST /api/reservas
+   crear reserva en estado PENDIENTE
+   ============================================================ */
 export const crearReserva = async (req, res) => {
   const conn = await pool.getConnection();
   try {
@@ -98,7 +96,7 @@ export const crearReserva = async (req, res) => {
       return badRequest(res, "id_cancha, inicio, fin y precio_total son requeridos");
     }
     if (!isISODateTime(inicio) || !isISODateTime(fin)) {
-      return badRequest(res, "inicio y fin deben ser formato YYYY-MM-DDTHH:mm");
+      return badRequest(res, "inicio y fin deben ser YYYY-MM-DDTHH:mm");
     }
 
     const precio = Number(precio_total);
@@ -114,7 +112,6 @@ export const crearReserva = async (req, res) => {
       `SELECT id_sucursal FROM cancha WHERE id_cancha = ? LIMIT 1`,
       [id_cancha]
     );
-
     if (!canchas.length) {
       await conn.rollback();
       return badRequest(res, "Cancha inexistente");
@@ -123,20 +120,16 @@ export const crearReserva = async (req, res) => {
     const id_sucursal = canchas[0].id_sucursal;
 
     if (rol === "ADMIN") {
-      const sucAdmin = req.user?.sucursal;
-      if (!sucAdmin || sucAdmin !== id_sucursal) {
+      if (req.user?.sucursal !== id_sucursal) {
         await conn.rollback();
         return conflict(res, "No puedes reservar en otra sucursal");
       }
     }
 
     const [suc] = await conn.query(
-      `SELECT hora_apertura, hora_cierre 
-       FROM sucursal 
-       WHERE id_sucursal = ? LIMIT 1`,
+      `SELECT hora_apertura, hora_cierre FROM sucursal WHERE id_sucursal = ?`,
       [id_sucursal]
     );
-
     if (!suc.length) {
       await conn.rollback();
       return badRequest(res, "Sucursal inexistente");
@@ -146,17 +139,14 @@ export const crearReserva = async (req, res) => {
     const apertura = `${fecha}T${suc[0].hora_apertura}`;
     const cierre = `${fecha}T${suc[0].hora_cierre}`;
 
-    const rangoOk = inicio >= apertura && fin <= cierre && inicio < fin;
-    if (!rangoOk) {
+    if (!(inicio >= apertura && fin <= cierre && inicio < fin)) {
       await conn.rollback();
       return conflict(res, "Fuera del horario de apertura");
     }
 
     const [overlaps] = await conn.query(
-      `SELECT 1
-       FROM reserva
-       WHERE id_cancha = ?
-         AND DATE(inicio) = DATE(?)
+      `SELECT 1 FROM reserva
+       WHERE id_cancha = ? AND DATE(inicio) = DATE(?)
          AND NOT (fin <= ? OR inicio >= ?)
        LIMIT 1`,
       [id_cancha, inicio, inicio, fin]
@@ -177,11 +167,12 @@ export const crearReserva = async (req, res) => {
     await conn.commit();
 
     return created(res, {
-      id_reserva: ins.insertId,
-      estado: "PENDIENTE",
-      precio_total: precio,
-      senia,
-    });
+  id_reserva: ins.insertId,
+  estado: "PENDIENTE",
+  precio_total: precio,
+  senia,
+});
+
 
   } catch (err) {
     await conn.rollback();
@@ -191,21 +182,18 @@ export const crearReserva = async (req, res) => {
   }
 };
 
-/**
- * PATCH /api/reservas/:id/estado
- * Cambia estado PENDIENTE → CONFIRMADA o RECHAZADA
- */
+/* ============================================================
+   PATCH /api/reservas/:id/estado
+   ADMIN confirma o rechaza → AGREGA NOTIFICACIÓN
+   ============================================================ */
 export const cambiarEstado = async (req, res) => {
   try {
-    const adminSucursal = req.user?.sucursal;
-    const rol = req.user?.role || req.user?.rol || null;
 
-    if (rol !== "ADMIN") {
-      return badRequest(res, "Solo ADMIN puede cambiar estado");
-    }
-    if (!adminSucursal) {
-      return badRequest(res, "El ADMIN no tiene sucursal asociada");
-    }
+    const rol = req.user?.role || req.user?.rol || null;
+    const adminSucursal = req.user?.sucursal;
+
+    if (rol !== "ADMIN") return badRequest(res, "Solo ADMIN");
+    if (!adminSucursal) return badRequest(res, "ADMIN sin sucursal asociada");
 
     const id = Number(req.params.id);
     const { estado } = req.body || {};
@@ -216,10 +204,10 @@ export const cambiarEstado = async (req, res) => {
       return badRequest(res, "Estado inválido");
     }
 
+    // Buscar reserva
     const [rows] = await pool.query(
-      `SELECT id_sucursal, estado
-       FROM reserva 
-       WHERE id_reserva = ? LIMIT 1`,
+      `SELECT id_sucursal, id_usuario, inicio, estado
+       FROM reserva WHERE id_reserva = ? LIMIT 1`,
       [id]
     );
     if (!rows.length) return badRequest(res, "Reserva no encontrada");
@@ -227,28 +215,44 @@ export const cambiarEstado = async (req, res) => {
     const r = rows[0];
 
     if (r.id_sucursal !== adminSucursal) {
-      return conflict(res, "No puedes modificar reservas de otra sucursal");
+      return conflict(res, "No puedes modificar otras sucursales");
     }
-
     if (r.estado !== "PENDIENTE") {
-      return conflict(res, "Solo se pueden modificar reservas PENDIENTES");
+      return conflict(res, "Solo reservas PENDIENTES");
     }
 
-    await pool.query(`UPDATE reserva SET estado=? WHERE id_reserva=?`, [
-      estado,
-      id,
-    ]);
+    // Actualizar estado
+    await pool.query(
+      `UPDATE reserva SET estado=? WHERE id_reserva=?`,
+      [estado, id]
+    );
+
+    // NOTIFICACIONES
+    let mensaje = "";
+    const fecha = new Date(r.inicio).toLocaleDateString("es-AR");
+
+    if (estado === "CONFIRMADA") {
+      mensaje = `Tu reserva del ${fecha} fue CONFIRMADA.`;
+    } else if (estado === "RECHAZADA") {
+      mensaje = `Tu reserva del ${fecha} fue RECHAZADA.`;
+    }
+
+    await pool.query(
+      `INSERT INTO notificacion (id_usuario, mensaje)
+       VALUES (?, ?)`,
+      [r.id_usuario, mensaje]
+    );
 
     return ok(res, { id_reserva: id, estado });
+
   } catch (err) {
     return serverError(res, err);
   }
 };
 
-/**
- * GET /api/reservas/mias
- * Lista reservas del usuario logueado
- */
+/* ============================================================
+   GET /api/reservas/mias
+   ============================================================ */
 export const listarMisReservas = async (req, res) => {
   try {
     const uid = req.user?.id;
@@ -265,7 +269,7 @@ export const listarMisReservas = async (req, res) => {
           c.nombre AS cancha,
           s.nombre AS sucursal
        FROM reserva r
-       JOIN cancha c   ON r.id_cancha = c.id_cancha
+       JOIN cancha c ON r.id_cancha = c.id_cancha
        JOIN sucursal s ON r.id_sucursal = s.id_sucursal
        WHERE r.id_usuario = ?
        ORDER BY r.inicio DESC`,
@@ -278,21 +282,16 @@ export const listarMisReservas = async (req, res) => {
   }
 };
 
-/**
- * GET /api/reservas/sucursal
- * ADMIN: reservas de su sucursal (filtros opcionales)
- */
+/* ============================================================
+   GET /api/reservas/sucursal  (ADMIN)
+   ============================================================ */
 export const listarReservasDeMiSucursal = async (req, res) => {
   try {
     const rol = req.user?.role || req.user?.rol || null;
     const sucursalId = req.user?.sucursal;
 
-    if (rol !== "ADMIN") {
-      return badRequest(res, "Solo ADMIN puede ver reservas de su sucursal");
-    }
-    if (!sucursalId) {
-      return badRequest(res, "ADMIN sin sucursal asociada");
-    }
+    if (rol !== "ADMIN") return badRequest(res, "Solo ADMIN");
+    if (!sucursalId) return badRequest(res, "ADMIN sin sucursal");
 
     const { estado, fecha } = req.query || {};
     const filtros = ["r.id_sucursal = ?"];
@@ -319,10 +318,10 @@ export const listarReservasDeMiSucursal = async (req, res) => {
           r.senia,
           c.nombre AS cancha,
           u.username AS usuario,
-          u.email   AS email_usuario
+          u.email AS email_usuario
        FROM reserva r
-       JOIN cancha c   ON r.id_cancha = c.id_cancha
-       JOIN usuario u  ON r.id_usuario = u.id_usuario
+       JOIN cancha c ON r.id_cancha = c.id_cancha
+       JOIN usuario u ON r.id_usuario = u.id_usuario
        ${where}
        ORDER BY r.inicio DESC
        LIMIT 500`,
@@ -335,16 +334,14 @@ export const listarReservasDeMiSucursal = async (req, res) => {
   }
 };
 
-/**
- * GET /api/reservas/admin
- * SUPERADMIN: reservas globales
- */
+/* ============================================================
+   GET /api/reservas/admin  (SUPERADMIN)
+   ============================================================ */
 export const listarReservasGlobal = async (req, res) => {
   try {
     const rol = req.user?.role || req.user?.rol || null;
-
     if (rol !== "SUPERADMIN") {
-      return badRequest(res, "Solo SUPERADMIN puede ver reservas globales");
+      return badRequest(res, "Solo SUPERADMIN");
     }
 
     const { sucursalId, estado, fecha } = req.query || {};
@@ -379,9 +376,9 @@ export const listarReservasGlobal = async (req, res) => {
           u.username AS usuario,
           u.email AS email_usuario
        FROM reserva r
-       JOIN cancha   c ON r.id_cancha = c.id_cancha
+       JOIN cancha c ON r.id_cancha = c.id_cancha
        JOIN sucursal s ON r.id_sucursal = s.id_sucursal
-       JOIN usuario  u ON r.id_usuario = u.id_usuario
+       JOIN usuario u ON r.id_usuario = u.id_usuario
        ${where}
        ORDER BY r.inicio DESC
        LIMIT 1000`,

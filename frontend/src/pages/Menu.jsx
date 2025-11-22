@@ -10,7 +10,7 @@ export default function Menu() {
   const { logout } = useContext(AuthContext);
 
   const handleLogout = () => {
-    logout();          // <-- Limpia token, user y estado global
+    logout();          // Limpia token + user
     navigate("/login");
   };
 
@@ -22,12 +22,17 @@ export default function Menu() {
         <h2 className="menu-title">Sistema de Reservas</h2>
 
         <div className="menu-links">
+
           <button onClick={() => navigate("/reservar")} className="menu-btn">
             Reservar cancha
           </button>
 
           <button onClick={() => navigate("/reservas")} className="menu-btn">
             Mis reservas
+          </button>
+
+          <button onClick={() => navigate("/notificaciones")} className="menu-btn">
+            Notificaciones
           </button>
 
           <button onClick={() => navigate("/perfil")} className="menu-btn">
@@ -58,4 +63,3 @@ export default function Menu() {
     </div>
   );
 }
-

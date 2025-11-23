@@ -9,17 +9,7 @@ if (!process.env.JWT_SECRET) {
 export const signToken = (payload) =>
   jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "8h" });
 
-/**
- * requireAuth(rolesOpcionales)
- * - Si roles está vacío → permite cualquier usuario autenticado
- * - Si roles tiene valores → solo deja pasar si req.user.role está incluido
- *
- * Además deja disponible en req.user:
- * - id
- * - role (JUGADOR / ADMIN / SUPERADMIN)
- * - username
- * - sucursal (id_sucursal o null)
- */
+
 export const requireAuth =
   (roles = []) =>
   (req, res, next) => {

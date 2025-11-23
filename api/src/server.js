@@ -24,7 +24,7 @@ const app = express();
 app.use(express.json());
 app.use(morgan("dev"));
 
-// --- CORS configurable por .env ---
+//CORS configurable por .env
 const rawOrigins = process.env.CORS_ORIGINS || "http://localhost:5173";
 const allowedOrigins = rawOrigins.split(",").map(o => o.trim());
 

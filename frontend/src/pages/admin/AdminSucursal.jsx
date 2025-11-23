@@ -22,9 +22,7 @@ export default function AdminSucursal() {
 
   const [form, setForm] = useState(emptyForm);
 
-  // ===============================
-  //   CARGAR SUCURSAL DEL ADMIN
-  // ===============================
+  //CARGAR SUCURSAL DEL ADMIN
   const loadSucursal = async () => {
     try {
       const res = await fetch(`${baseUrl}/api/sucursales/mi`, {
@@ -47,9 +45,7 @@ export default function AdminSucursal() {
     loadSucursal();
   }, []);
 
-  // ===============================
-  //   ABRIR MODAL DE EDICIÓN
-  // ===============================
+  //ABRIR MODAL DE EDICIÓN
   const openEdit = () => {
     setForm({
       nombre: sucursal.nombre,
@@ -65,9 +61,7 @@ export default function AdminSucursal() {
     setShowEditModal(true);
   };
 
-  // ===============================
-  //   GUARDAR CAMBIOS
-  // ===============================
+  //GUARDAR CAMBIOS
   const handleEdit = async (e) => {
     e.preventDefault();
 

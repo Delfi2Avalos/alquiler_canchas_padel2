@@ -10,17 +10,13 @@ import { useContext } from "react";
 import "./styles/App.css";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
 
-/* ========================================= */
-/*                PUBLIC PAGES               */
-/* ========================================= */
+//PÁGINAS PÚBLICAS
 import Home from "./pages/Home";
 import Menu from "./pages/Menu";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
-/* ========================================= */
-/*                 JUGADOR                   */
-/* ========================================= */
+//JUGADOR
 import Reservas from "./pages/Reservas";
 import ElegirSucursal from "./pages/jugador/ElegirSucursal";
 import ElegirCancha from "./pages/jugador/ElegirCancha";
@@ -31,18 +27,14 @@ import Perfil from "./pages/Perfil";
 import EditarPerfil from "./pages/EditarPerfil";
 import JugadorNotificaciones from "./pages/JugadorNotificaciones";
 
-/* ========================================= */
-/*                    ADMIN                  */
-/* ========================================= */
+//ADMIN
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminReservas from "./pages/admin/AdminReservas";
 import AdminCanchas from "./pages/admin/AdminCanchas";
-// import AdminPagos from "./pages/admin/AdminPagos";  // 🔥 OCULTO
+// import AdminPagos from "./pages/admin/AdminPagos"; 
 import AdminReportes from "./pages/admin/AdminReportes";
 
-/* ========================================= */
-/*                 SUPERADMIN                */
-/* ========================================= */
+//SUPERADMIN
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 import SuperAdminSucursales from "./pages/superadmin/SuperAdminSucursales";
 import SuperAdminReservas from "./pages/superadmin/SuperAdminReservas";
@@ -51,9 +43,6 @@ import SuperAdminJugadores from "./pages/superadmin/SuperAdminJugadores";
 import SuperAdminAdmins from "./pages/superadmin/SuperAdminAdmins";
 import SuperAdminReportes from "./pages/superadmin/SuperAdminReportes";
 
-/* ========================================= */
-/*              AUTH PROTECTIONS             */
-/* ========================================= */
 
 function RequireAuth({ children }) {
   const { user, loading } = useContext(AuthContext);
@@ -84,9 +73,6 @@ function RequireRole({ roles, children }) {
   return children;
 }
 
-/* ========================================= */
-/*                ROUTING TABLE              */
-/* ========================================= */
 
 function AppRoutes() {
   const { user } = useContext(AuthContext);
@@ -97,7 +83,7 @@ function AppRoutes() {
     const role = (user.role || "").toUpperCase();
     if (role === "SUPERADMIN") return "/superadmin/dashboard";
     if (role === "ADMIN") return "/admin/dashboard";
-    return "/home"; // jugador
+    return "/home"; 
   };
 
   return (
@@ -152,7 +138,7 @@ function AppRoutes() {
         }
       />
 
-      {/* ========== FLUJO JUGADOR ========== */}
+      {/*FLUJO JUGADOR*/}
       <Route
         path="/reservar"
         element={
@@ -274,7 +260,7 @@ function AppRoutes() {
         }
       />
 
-      {/* 🔥 PAGOS OCULTOS
+      {/* PAGOS OCULTOS
       <Route
         path="/superadmin/pagos"
         element={

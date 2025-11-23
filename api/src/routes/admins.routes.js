@@ -4,10 +4,8 @@ import bcrypt from "bcryptjs";
 
 const router = Router();
 
-/**
- * GET /api/admins
- * Lista todos los administradores del sistema.
- */
+//ruta: GET /api/admins
+//Lista todos los administradores del sistema.
 router.get("/", async (req, res) => {
   try {
     const [rows] = await pool.query(`
@@ -25,10 +23,9 @@ router.get("/", async (req, res) => {
   }
 });
 
-/**
- * POST /api/admins
- * Crea un nuevo admin (CON SUCURSAL OBLIGATORIA)
- */
+
+ //ruta: POST /api/admins
+ //Crea un nuevo admin (CON SUCURSAL OBLIGATORIA)
 router.post("/", async (req, res) => {
   try {
     const {
@@ -68,10 +65,9 @@ router.post("/", async (req, res) => {
   }
 });
 
-/**
- * PUT /api/admins/:id
- * Edita un admin existente (también exige sucursal)
- */
+
+ //ruta: PUT /api/admins/:id
+ //Edita un admin existente (también exige sucursal)
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -100,10 +96,9 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-/**
- * DELETE /api/admins/:id
- * Elimina un admin
- */
+
+ //ruta: DELETE /api/admins/:id
+ //Elimina un admin
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;

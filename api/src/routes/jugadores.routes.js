@@ -8,22 +8,18 @@ import {
 
 const r = Router();
 
-/**
- * GET /api/jugadores
- * Solo SUPERADMIN puede ver la lista completa
- */
+
+//ruta: GET /api/jugadores
+//Solo SUPERADMIN puede ver la lista completa
 r.get("/", requireAuth(["SUPERADMIN"]), listarJugadores);
 
-/**
- * PUT /api/jugadores/:id
- * Actualizar datos de un jugador
- */
+//ruta: PUT /api/jugadores/:id
+//Actualizar datos de un jugador
 r.put("/:id", requireAuth(["SUPERADMIN"]), actualizarJugador);
 
-/**
- * DELETE /api/jugadores/:id
- * Desactivar jugador (baja lógica)
- */
+
+ //ruta: DELETE /api/jugadores/:id
+ //Desactivar jugador
 r.delete("/:id", requireAuth(["SUPERADMIN"]), desactivarJugador);
 
 export default r;

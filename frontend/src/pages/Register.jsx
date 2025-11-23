@@ -1,4 +1,3 @@
-// frontend/src/pages/Register.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { register } from "../services/authService";
@@ -16,17 +15,16 @@ export default function Register() {
     password: "",
   });
 
-  // Manejo de cambios de inputs
   const onChange = (e) => {
     const { name, value } = e.target;
 
     if (name === "dni") {
-      // Solo números y máximo 8
+      //Solo números y máximo 8
       if (/^\d{0,8}$/.test(value)) {
         setForm((f) => ({ ...f, [name]: value }));
       }
     } else if (name === "telefono") {
-      // Solo números, cualquier longitud
+      //Solo números, cualquier longitud
       if (/^\d*$/.test(value)) {
         setForm((f) => ({ ...f, [name]: value }));
       }
@@ -35,12 +33,12 @@ export default function Register() {
     }
   };
 
-  // Envío del registro
+  //Envío del registro
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
       const res = await register(form); // Llamada al backend
-      alert(`Usuario ${form.nombre} registrado correctamente 🎉`);
+      alert(`Usuario ${form.nombre} registrado correctamente`);
       navigate("/login");
     } catch (err) {
       const msg = err?.response?.data?.msg || "Error al registrar";

@@ -8,7 +8,7 @@ export default function Home() {
   const { user, logout } = useContext(AuthContext);
 
   const handleStart = () => {
-    // Siempre debe llevar al login desde el Home
+    
     if (user) logout();
     navigate("/login");
   };

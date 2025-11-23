@@ -14,16 +14,16 @@ import {
 
 const r = Router();
 
-// JUGADOR o ADMIN → ver disponibilidad del día
+// JUGADOR o ADMIN: ver disponibilidad del día
 r.get("/disponibilidad", requireAuth(["JUGADOR", "ADMIN"]), disponibilidad);
 
-// Horarios verdes/libres u ocupados (modo “cuadriculado”)
+//JUGADOR O ADMIN: ver horarios disponibles para una cancha en una fecha
 r.get("/horarios", requireAuth(["JUGADOR", "ADMIN"]), horariosDisponibles);
 
 // Crear reserva (estado PENDIENTE)
 r.post("/", requireAuth(["JUGADOR", "ADMIN"]), crearReserva);
 
-// Cambiar estado (CONFIRMADA / RECHAZADA) → solo ADMIN
+// Cambiar estado (CONFIRMADA / RECHAZADA): solo ADMIN
 r.patch("/:id/estado", requireAuth(["ADMIN"]), cambiarEstado);
 
 // Reservas del usuario logueado

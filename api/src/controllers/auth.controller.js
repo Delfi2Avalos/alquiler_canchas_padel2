@@ -8,10 +8,9 @@ const isEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || "").toLower
 const isDni = (s) => /^[0-9]{7,10}$/.test(String(s || ""));
 const hasMin = (s, n) => String(s || "").length >= n;
 
-/**
- * LOGIN
- * POST /api/auth/login
- */
+
+ //LOGIN
+ //ruta: POST /api/auth/login
 export const login = async (req, res) => {
   try {
     let { username, password } = req.body || {};
@@ -37,7 +36,7 @@ export const login = async (req, res) => {
 
     // Payload del JWT:
     // - id: id del usuario
-    // - role: JUGADOR / ADMIN / SUPERADMIN
+    // - roles: JUGADOR / ADMIN / SUPERADMIN
     // - username
     // - sucursal: id_sucursal (null para jugadores)
     const token = signToken({
@@ -61,10 +60,10 @@ export const login = async (req, res) => {
   }
 };
 
-/**
- * REGISTRO (rol por defecto: JUGADOR)
- * POST /api/auth/register
- */
+
+ //REGISTRO (rol por defecto: JUGADOR)
+ //ruta: POST /api/auth/register
+
 export const register = async (req, res) => {
   try {
     let { nombre, dni, username, email, telefono, password } = req.body || {};
@@ -113,10 +112,10 @@ export const register = async (req, res) => {
   }
 };
 
-/**
- * PERFIL (requiere token)
- * GET /api/auth/me
- */
+
+ // PERFIL (requiere token)
+ //ruta: GET /api/auth/me
+ 
 export const me = async (req, res) => {
   try {
     const uid = req.user?.id;

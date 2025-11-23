@@ -6,7 +6,7 @@ export default function SuperAdminReportes() {
   const [reservasSucursales, setReservasSucursales] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Cargar informe
+  //Cargar informe
   const cargarReportes = async () => {
     try {
       const r1 = await api.get("/reportes/superadmin/reservas-por-sucursal");

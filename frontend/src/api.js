@@ -1,6 +1,6 @@
 import axios from "axios";
 
-// Crear instancia de axios
+//Crear instancia de axios
   const api = axios.create({
   baseURL: "http://192.168.1.41:3001/api",
   // baseURL: "http://192.168.0.105:3001/api", //wifi facultad: Instituto Tecnologico 1
@@ -9,7 +9,7 @@ import axios from "axios";
   },
 });
 
-// Interceptor: agregar token automáticamente en cada request
+//Interceptor: agregar token automáticamente en cada request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {

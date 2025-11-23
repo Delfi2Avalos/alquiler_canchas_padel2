@@ -8,10 +8,9 @@ import {
   asyncHandler,
 } from "../utils/http.js";
 
-/**
- * POST /api/pagos
- * JUGADOR o ADMIN registran un pago (comprobante)
- */
+
+ //ruta: POST /api/pagos
+ //JUGADOR o ADMIN registran un pago (comprobante)
 export const crearPago = asyncHandler(async (req, res) => {
   const { id_reserva, monto, metodo, referencia } = req.body || {};
   const rol = req.user?.role || req.user?.rol || null;
@@ -49,7 +48,6 @@ export const crearPago = asyncHandler(async (req, res) => {
     );
   }
 
-  // Insertamos usando comprobante_subido_en
   const [ins] = await pool.query(
     `
     INSERT INTO pago (
@@ -71,9 +69,7 @@ export const crearPago = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * PATCH /api/pagos/:id/estado
- */
+//ruta: PATCH /api/pagos/:id/estado
 export const cambiarEstadoPago = asyncHandler(async (req, res) => {
   const rol = req.user?.role || req.user?.rol || null;
   const adminSucursal = req.user?.sucursal || null;
@@ -128,10 +124,10 @@ export const cambiarEstadoPago = asyncHandler(async (req, res) => {
   return ok(res, { id_pago: id, estado: String(estado).toUpperCase() });
 });
 
-/**
- * GET /api/pagos/sucursal
- * ADMIN ve pagos de SU sucursal
- */
+
+ //ruta: GET /api/pagos/sucursal
+ //ADMIN ve pagos de SU sucursal
+ 
 export const listarPagosSucursal = asyncHandler(async (req, res) => {
   const rol = req.user?.role || req.user?.rol || null;
   const sucursalId = req.user?.sucursal || null;
@@ -183,10 +179,9 @@ export const listarPagosSucursal = asyncHandler(async (req, res) => {
   return ok(res, rows);
 });
 
-/**
- * GET /api/pagos/admin
- * SUPERADMIN ve TODOS los pagos
- */
+
+ //ruta: GET /api/pagos/admin
+ //SUPERADMIN ve TODOS los pagos
 export const listarPagosGlobal = asyncHandler(async (req, res) => {
   const rol = req.user?.role || req.user?.rol || null;
 

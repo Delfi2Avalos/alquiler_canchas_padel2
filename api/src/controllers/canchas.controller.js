@@ -6,11 +6,10 @@ import {
   asyncHandler,
 } from "../utils/http.js";
 
-/**
- * LISTADO PÚBLICO POR SUCURSAL
- * GET /api/canchas/sucursal/:sedeId
- * - Para jugadores / público (no necesita token)
- */
+
+ //LISTADO PÚBLICO POR SUCURSAL
+ //ruta: GET /api/canchas/sucursal/:sedeId
+ //Para jugadores / público (no necesita token)
 export const listarCanchasPorSucursalPublic = asyncHandler(async (req, res) => {
   const sedeId = Number(
     req.params.sedeId || req.params.id || req.query.sedeId
@@ -36,11 +35,10 @@ export const listarCanchasPorSucursalPublic = asyncHandler(async (req, res) => {
   return ok(res, rows);
 });
 
-/**
- * LISTAR CANCHAS DE MI SUCURSAL (SOLO ADMIN)
- * GET /api/canchas/mi
- * - Usa req.user.sucursal (id_sucursal del admin)
- */
+
+ //LISTAR CANCHAS DE MI SUCURSAL (SOLO ADMIN)
+ //ruta: GET /api/canchas/mi
+ //Usa req.user.sucursal (id_sucursal del admin)
 export const listarCanchasDeMiSucursal = asyncHandler(async (req, res) => {
   const sucursalId = req.user?.sucursal;
   if (!sucursalId) {
@@ -67,19 +65,9 @@ export const listarCanchasDeMiSucursal = asyncHandler(async (req, res) => {
   return ok(res, rows);
 });
 
-/**
- * CREAR CANCHA EN MI SUCURSAL (SOLO ADMIN)
- * POST /api/canchas
- *
- * Body esperado:
- * - nombre (string, requerido)
- * - cubierta (0/1 o boolean, opcional, default 0)
- * - iluminacion (0/1 o boolean, opcional, default 1)
- * - piso ('CESPED' | 'CEMENTO' | 'MIXTO', opcional, default 'CESPED')
- * - paredes ('ALAMBRADO' | 'VIDRIO' | 'MIXTAS', opcional, default 'ALAMBRADO')
- * - observaciones (string, opcional)
- * - estado ('ACTIVA' | 'INACTIVA' | 'MANTENIMIENTO', opcional, default 'ACTIVA')
- */
+
+ //CREAR CANCHA EN MI SUCURSAL (SOLO ADMIN)
+ //ruta: POST /api/canchas
 export const crearCanchaEnMiSucursal = asyncHandler(async (req, res) => {
   const sucursalId = req.user?.sucursal;
   if (!sucursalId) {
@@ -163,10 +151,8 @@ export const crearCanchaEnMiSucursal = asyncHandler(async (req, res) => {
   }
 });
 
-/**
- * ACTUALIZAR CANCHA DE MI SUCURSAL (SOLO ADMIN)
- * PUT /api/canchas/:id
- */
+ //ACTUALIZAR CANCHA DE MI SUCURSAL (SOLO ADMIN)
+ //ruta: PUT /api/canchas/:id
 export const actualizarCanchaDeMiSucursal = asyncHandler(async (req, res) => {
   const sucursalId = req.user?.sucursal;
   if (!sucursalId) {
@@ -267,10 +253,9 @@ export const actualizarCanchaDeMiSucursal = asyncHandler(async (req, res) => {
   }
 });
 
-/**
- * ELIMINAR CANCHA DE MI SUCURSAL (SOLO ADMIN)
- * DELETE /api/canchas/:id
- */
+
+ //ELIMINAR CANCHA DE MI SUCURSAL (SOLO ADMIN)
+ //ruta: DELETE /api/canchas/:id
 export const eliminarCanchaDeMiSucursal = asyncHandler(async (req, res) => {
   const sucursalId = req.user?.sucursal;
   if (!sucursalId) {

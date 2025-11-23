@@ -1,4 +1,4 @@
-/* ----------- ESTILOS GENERALES ----------- */
+/*ESTILOS GENERALES*/
 body {
   margin: 0;
   padding: 0;
@@ -6,7 +6,7 @@ body {
   background-color: #f4f6f8;
 }
 
-/* ----------- HOME ----------- */
+/*HOME*/
 .home-container {
   position: relative;
   height: 100vh;
@@ -71,7 +71,7 @@ body {
 }
 
 
-/* ----------- LOGIN Y REGISTER ----------- */
+/*LOGIN Y REGISTER*/
 .page-container {
   text-align: center;
   width: 100%;
@@ -158,7 +158,7 @@ body {
   text-decoration: underline;
 }
 
-/* ======== MENU GENERAL ======== */
+/*MENU GENERAL*/
 .menu-container {
   position: relative;
   height: 100vh;
@@ -177,7 +177,7 @@ body {
   z-index: 0;
 }
 
-/* ======== NAVBAR ======== */
+/*NAVBAR*/
 .menu-navbar {
   position: relative;
   z-index: 2;
@@ -224,7 +224,7 @@ body {
   background: rgba(255, 77, 77, 0.2);
 }
 
-/* ======== MENU HAMBURGUESA ======== */
+/*MENU HAMBURGUESA*/
 .menu-toggle {
   display: none;
   cursor: pointer;
@@ -259,7 +259,7 @@ body {
   }
 }
 
-/* ======== CONTENIDO PRINCIPAL ======== */
+/*CONTENIDO PRINCIPAL*/
 .menu-content {
   position: relative;
   z-index: 1;
@@ -302,7 +302,7 @@ body {
   transform: translateY(-2px);
 }
 
-/* ======== FOOTER ======== */
+/*FOOTER*/
 .menu-footer {
   position: relative;
   z-index: 1;
@@ -314,7 +314,7 @@ body {
   background: rgba(0, 0, 0, 0.3);
 }
 
-/* ----------- HORARIOS RESERVA ----------- */
+/*HORARIOS RESERVA*/
 .grid-horarios {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -354,7 +354,7 @@ body {
   border-radius: 6px;
 }
 
-/* ----------- TARJETAS DE RESERVAS (Mis Reservas / Admin) ----------- */
+/*TARJETAS DE RESERVAS (Mis Reservas/Admin)*/
 .reserva-card {
   background: #fff;
   border: 1px solid #ddd;
@@ -364,18 +364,18 @@ body {
 }
 
 .estado-pendiente {
-  color: #f1c40f; /* amarillo */
+  color: #f1c40f;
 }
 
 .estado-confirmada {
-  color: #2ecc71; /* verde */
+  color: #2ecc71;
 }
 
 .estado-rechazada {
-  color: #e74c3c; /* rojo */
+  color: #e74c3c; 
 }
 
-/* ----------- ADMIN RESERVAS ----------- */
+/*ADMIN RESERVAS*/
 .admin-container {
   padding: 20px;
   color: #333;

@@ -29,7 +29,6 @@ export default function ElegirHorario() {
     cargarOcupados();
   }, []);
 
-  // === SUPERPOSICIÓN — FIX DEFINITIVO ===
   const seSuperpone = () => {
     if (!horaInicio || !horaFin) return false;
 

@@ -1,6 +1,6 @@
 import { pool } from "../config/db.js";
 
-// GET /api/jugadores  (solo SUPERADMIN)
+//ruta: GET /api/jugadores  (solo SUPERADMIN)
 export const listarJugadores = async (req, res) => {
   try {
     const [rows] = await pool.query(
@@ -30,7 +30,7 @@ export const listarJugadores = async (req, res) => {
   }
 };
 
-// PUT /api/jugadores/:id  (actualizar datos)
+//ruta: PUT /api/jugadores/:id  (actualizar datos)
 export const actualizarJugador = async (req, res) => {
   const { id } = req.params;
   const { nombre, username, email, telefono, dni, activo } = req.body;
@@ -70,7 +70,7 @@ export const actualizarJugador = async (req, res) => {
   }
 };
 
-// DELETE /api/jugadores/:id  (baja lógica)
+//ruta: DELETE /api/jugadores/:id  
 export const desactivarJugador = async (req, res) => {
   const { id } = req.params;
 

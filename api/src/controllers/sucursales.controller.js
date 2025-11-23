@@ -7,11 +7,10 @@ import {
   asyncHandler,
 } from "../utils/http.js";
 
-/**
- * LISTADO PÚBLICO DE SUCURSALES
- * GET /api/sucursales/
- * - Para jugadores / público general
- */
+
+ //LISTADO PÚBLICO DE SUCURSALES
+ //ruta: GET /api/sucursales/
+ //Para jugadores / público general
 export const listarSucursalesPublic = asyncHandler(async (_req, res) => {
   const [rows] = await pool.query(
     `SELECT id_sucursal, nombre, ciudad, provincia, hora_apertura, hora_cierre
@@ -21,11 +20,10 @@ export const listarSucursalesPublic = asyncHandler(async (_req, res) => {
   return ok(res, rows);
 });
 
-/**
- * LISTADO COMPLETO (SOLO SUPERADMIN)
- * GET /api/sucursales/admin
- * - Devuelve todas las sucursales con más detalles
- */
+
+//LISTADO COMPLETO (SOLO SUPERADMIN)
+//ruta: GET /api/sucursales/admin
+//Devuelve todas las sucursales con más detalles
 export const listarSucursalesAdmin = asyncHandler(async (_req, res) => {
   const [rows] = await pool.query(
     `SELECT 
@@ -44,10 +42,9 @@ export const listarSucursalesAdmin = asyncHandler(async (_req, res) => {
   return ok(res, rows);
 });
 
-/**
- * CREAR SUCURSAL (SOLO SUPERADMIN)
- * POST /api/sucursales/
- */
+
+//CREAR SUCURSAL (SOLO SUPERADMIN)
+//ruta: POST /api/sucursales/
 export const crearSucursal = asyncHandler(async (req, res) => {
   const {
     nombre,
@@ -86,10 +83,9 @@ export const crearSucursal = asyncHandler(async (req, res) => {
   });
 });
 
-/**
- * ACTUALIZAR SUCURSAL (SOLO SUPERADMIN)
- * PUT /api/sucursales/:id
- */
+
+//ACTUALIZAR SUCURSAL (SOLO SUPERADMIN)
+//ruta: PUT /api/sucursales/:id
 export const actualizarSucursal = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const idNum = Number(id);
@@ -144,10 +140,9 @@ export const actualizarSucursal = asyncHandler(async (req, res) => {
   return ok(res, { msg: "Sucursal actualizada correctamente" });
 });
 
-/**
- * ELIMINAR SUCURSAL (SOLO SUPERADMIN)
- * DELETE /api/sucursales/:id
- */
+
+//ELIMINAR SUCURSAL (SOLO SUPERADMIN)
+//ruta: DELETE /api/sucursales/:id
 export const eliminarSucursal = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const idNum = Number(id);
@@ -168,11 +163,10 @@ export const eliminarSucursal = asyncHandler(async (req, res) => {
   return ok(res, { msg: "Sucursal eliminada correctamente" });
 });
 
-/**
- * MI SUCURSAL (SOLO ADMIN)
- * GET /api/sucursales/mi
- * - Usa req.user.sucursal (id_sucursal del admin)
- */
+
+//MI SUCURSAL (SOLO ADMIN)
+//ruta: GET /api/sucursales/mi
+//Usa req.user.sucursal (id_sucursal del admin)
 export const miSucursal = asyncHandler(async (req, res) => {
   const sucursalId = req.user?.sucursal;
 

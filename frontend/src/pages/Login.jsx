@@ -5,7 +5,7 @@ import { AuthContext } from "../context/AuthContext";
 import "../styles/App.css";
 
 export default function Login() {
-  const navigate = useNavigate(); // si querés, después lo podemos sacar
+  const navigate = useNavigate(); 
   const { login: authLogin } = useContext(AuthContext);
 
   const [username, setUsername] = useState("");
@@ -24,7 +24,6 @@ export default function Login() {
     console.log("ROL NORMALIZADO:", loginData.user?.role);
 
     if (loginData?.user) {
-      // El AuthContext recibe un user ya normalizado
       authLogin(loginData.user);
       return;
     }

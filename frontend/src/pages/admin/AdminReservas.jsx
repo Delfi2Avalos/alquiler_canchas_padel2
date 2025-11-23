@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../../api"; // usamos el axios configurado con token
+import api from "../../api"; //axios configurado con token
 import "../../styles/Dashboard.css";
 
 export default function AdminReservas() {
@@ -9,10 +9,8 @@ export default function AdminReservas() {
   const [filtroEstado, setFiltroEstado] = useState("");
   const [filtroFecha, setFiltroFecha] = useState("");
 
-  // Ahora solo estos 3 estados existen en la BD
   const estadosFiltro = ["PENDIENTE", "CONFIRMADA", "RECHAZADA"];
 
-  // ---------- helpers de formato ----------
   const formatDate = (iso) =>
     iso
       ? new Date(iso).toLocaleDateString("es-AR", {
@@ -30,7 +28,6 @@ export default function AdminReservas() {
         })
       : "-";
 
-  // helper para convertir distintas formas de respuesta a array
   const asArray = (res, preferredKey) => {
     if (!res || !res.data) return [];
     const d = res.data;
@@ -45,9 +42,7 @@ export default function AdminReservas() {
     return [];
   };
 
-  // ============================
-  //   CARGAR RESERVAS (MI SUCURSAL)
-  // ============================
+  //CARGAR RESERVAS (MI SUCURSAL)
   const loadReservas = async () => {
     try {
       setLoading(true);
@@ -78,9 +73,7 @@ export default function AdminReservas() {
     loadReservas();
   }, [filtroEstado, filtroFecha]);
 
-  // ============================
-  //   ACCIONES DEL ADMIN
-  // ============================
+  //ACCIONES DEL ADMIN
   const cambiarEstado = async (id, nuevoEstado) => {
     try {
       const res = await api.patch(`/reservas/${id}/estado`, {
@@ -106,16 +99,12 @@ export default function AdminReservas() {
   };
 
   const modificarReserva = (reserva) => {
-    // Por ahora solo mostramos un aviso.
-    // Más adelante acá podés abrir un modal para cambiar horario/cancha, etc.
     alert(
       `Funcionalidad de modificar reserva #${reserva.id_reserva} (solo PENDIENTE) - pendiente de implementación`
     );
   };
 
-  // ============================
-  //   UI
-  // ============================
+  //UI
   return (
     <div className="dashboard-container">
       <div className="dashboard-overlay" />

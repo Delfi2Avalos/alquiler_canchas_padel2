@@ -8,7 +8,6 @@ export default function SuperAdminPagos() {
   const [errorMsg, setErrorMsg] = useState("");
   const [busqueda, setBusqueda] = useState("");
 
-  // Helper para leer arrays de respuestas tipo { ok, data: [...] } o similar
   const asArray = (res, preferredKey) => {
     if (!res || !res.data) return [];
     const d = res.data;
@@ -30,7 +29,7 @@ export default function SuperAdminPagos() {
       const lista = asArray(res, "pagos");
       setPagos(lista);
       setErrorMsg("");
-      // Para inspeccionar qué campos llegan (podés verlo en la consola del navegador):
+  
       console.log("Pagos recibidos:", lista);
     } catch (err) {
       console.error("Error cargando pagos:", err?.response?.data || err);
@@ -51,7 +50,6 @@ export default function SuperAdminPagos() {
     loadPagos();
   }, []);
 
-  // ---------- Helpers para mostrar campos ----------
 
   const getFecha = (pago) => {
     const raw =
@@ -65,7 +63,7 @@ export default function SuperAdminPagos() {
     if (!raw) return "-";
 
     const s = String(raw);
-    // si viene como "2025-11-18T01:23:45.000Z"
+
     if (s.length >= 10) {
       const [y, m, d] = s.slice(0, 10).split("-");
       if (y && m && d) return `${d}/${m}/${y}`;
@@ -104,8 +102,7 @@ export default function SuperAdminPagos() {
     return pago.estado || "-";
   };
 
-  // ---------- Buscador ----------
-
+  //Buscador
   const pagosFiltrados = pagos.filter((p) => {
     if (!busqueda) return true;
     const t = busqueda.toLowerCase();

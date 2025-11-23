@@ -28,7 +28,7 @@ export default function EditarPerfil() {
     cargarDatos();
   }, []);
 
-  // Solo números en DNI y Teléfono
+  //Solo números en DNI y Teléfono
   const handleNumberInput = (e) => {
     const { name, value } = e.target;
     if (/^\d*$/.test(value)) {
@@ -36,7 +36,7 @@ export default function EditarPerfil() {
     }
   };
 
-  // Email y Nombre normales
+  //Email y Nombre normales
   const handleInput = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -44,7 +44,7 @@ export default function EditarPerfil() {
   const guardar = async () => {
     setError("");
 
-    // Validaciones FRONTEND:
+    //Validaciones FRONTEND:
     if (!form.nombre.trim()) return setError("El nombre es obligatorio");
 
     if (!/^\d{7,8}$/.test(form.dni))

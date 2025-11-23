@@ -10,7 +10,7 @@ export default function Menu() {
   const { logout } = useContext(AuthContext);
 
   const handleLogout = () => {
-    logout();          // Limpia token + user
+    logout();          
     navigate("/login");
   };
 

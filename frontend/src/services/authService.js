@@ -1,7 +1,7 @@
 import api from "../api";
 import { jwtDecode } from "jwt-decode";
 
-// REGISTRO
+//REGISTRO
 export async function register(payload) {
   const res = await api.post("/auth/register", payload);
 
@@ -15,7 +15,7 @@ export async function register(payload) {
   return payloadRes;
 }
 
-// LOGIN
+//LOGIN
 export async function login({ username, password }) {
   const res = await api.post("/auth/login", { username, password });
 
@@ -55,7 +55,7 @@ export async function login({ username, password }) {
   };
 }
 
-// LOGOUT
+//LOGOUT
 export function logout() {
   localStorage.removeItem("token");
 }

@@ -1,7 +1,4 @@
-/* =============================== */
-/*   ESTILO GENERAL DEL JUGADOR   */
-/* =============================== */
-
+/*ESTILO GENERAL DEL JUGADOR*/
 .jugador-container {
   padding: 25px;
   max-width: 900px;
@@ -16,10 +13,7 @@
   font-weight: 600;
 }
 
-/* =============================== */
-/*        LISTA DE ITEMS           */
-/* =============================== */
-
+/*LISTA DE ITEMS*/
 .lista-sucursales,
 .lista-canchas,
 .lista-fechas {
@@ -57,10 +51,7 @@
   color: #555;
 }
 
-/* =============================== */
-/*            BOTONES              */
-/* =============================== */
-
+/*BOTONES*/
 .btn-confirmar {
   margin-top: 10px;
   padding: 12px 18px;
@@ -79,10 +70,7 @@
   transform: scale(1.02);
 }
 
-/* =============================== */
-/*      INPUT FECHA / CALENDARIO   */
-/* =============================== */
-
+/*INPUT FECHA/CALENDARIO*/
 input[type="date"] {
   padding: 12px 15px;
   border-radius: 8px;
@@ -93,10 +81,7 @@ input[type="date"] {
   width: 220px;
 }
 
-/* =============================== */
-/*       GRID DE HORARIOS          */
-/* =============================== */
-
+/*GRID DE HORARIOS*/
 .grid-horarios {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -138,10 +123,7 @@ input[type="date"] {
   outline: 3px solid #34495e;
 }
 
-/* =============================== */
-/*         CONFIRMACIÓN            */
-/* =============================== */
-
+/*CONFIRMACIÓN*/
 .confirmacion-box {
   background: white;
   padding: 25px;
@@ -164,10 +146,7 @@ input[type="date"] {
   margin-bottom: 15px;
 }
 
-/* =============================== */
-/*           RESPONSIVE            */
-/* =============================== */
-
+/*RESPONSIVE*/
 @media (max-width: 600px) {
   .grid-horarios {
     grid-template-columns: repeat(2, 1fr);
@@ -178,10 +157,7 @@ input[type="date"] {
   }
 }
 
-/* =============================== */
-/*          MIS RESERVAS           */
-/* =============================== */
-
+/*MIS RESERVAS*/
 .lista-reservas-jugador {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));

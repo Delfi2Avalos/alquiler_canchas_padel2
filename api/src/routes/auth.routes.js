@@ -4,23 +4,20 @@ import { requireAuth } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-/**
- * LOGIN
- * POST /api/auth/login
- */
+
+//LOGIN
+//ruta: POST /api/auth/login
 router.post("/login", login);
 
-/**
- * REGISTRO (jugador)
- * POST /api/auth/register
- */
+
+//REGISTRO (jugador)
+//ruta: POST /api/auth/register
 router.post("/register", register);
 
-/**
- * PERFIL DEL USUARIO LOGUEADO
- * GET /api/auth/me
- * Requiere token
- */
+
+//PERFIL DEL USUARIO LOGUEADO
+//ruta: GET /api/auth/me
+//Requiere token
 router.get("/me", requireAuth(), me);
 
 export default router;

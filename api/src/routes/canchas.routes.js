@@ -10,25 +10,20 @@ import { requireAuth } from "../middlewares/auth.js";
 
 const r = Router();
 
-/* ============================================================
-   RUTA QUE NECESITA EL FRONTEND
-   GET /api/sucursales/:id_sucursal/canchas
-   ============================================================ */
+
+//RUTA QUE NECESITA EL FRONTEND: GET /api/sucursales/:id_sucursal/canchas
 r.get("/por-sucursal/:id_sucursal", (req, res) => {
   req.params.sedeId = req.params.id_sucursal;  
   listarCanchasPorSucursalPublic(req, res);
 });
 
-/* ============================================================
-   RUTA ORIGINAL
-   GET /api/canchas/sucursal/:sedeId
-   ============================================================ */
+
+//RUTA ORIGINAL: GET /api/canchas/sucursal/:sedeId
+   
 r.get("/sucursal/:sedeId", listarCanchasPorSucursalPublic);
 
-/* ============================================================
-   RUTAS SOLO ADMIN
-   ============================================================ */
 
+//RUTAS SOLO ADMIN
 // GET /api/canchas/mi
 r.get("/mi", requireAuth(["ADMIN"]), listarCanchasDeMiSucursal);
 

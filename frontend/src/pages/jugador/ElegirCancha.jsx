@@ -7,7 +7,7 @@ export default function ElegirCancha() {
   const { sucursalId } = useParams();
   const location = useLocation();
 
-  // Nombre de la sucursal desde ElegirSucursal
+  //Nombre de la sucursal desde ElegirSucursal
   const sucursalNombre = location.state?.sucursalNombre || "Sucursal";
 
   const [canchas, setCanchas] = useState([]);

@@ -13,7 +13,6 @@ export default function SuperAdminReservas() {
     fecha: "",
   });
 
-  // ============ HELPERS ============
   const formatearFecha = (iso) => {
     if (!iso) return "-";
     const [y, m, d] = iso.slice(0, 10).split("-");
@@ -27,7 +26,7 @@ export default function SuperAdminReservas() {
     return `${h1} - ${h2}`;
   };
 
-  // ============ CARGAR SUCURSALES ============
+  //CARGAR SUCURSALES
   const loadSucursales = async () => {
     try {
       const res = await api.get("/sucursales/admin");
@@ -39,15 +38,15 @@ export default function SuperAdminReservas() {
     }
   };
 
-  // ============ CARGAR RESERVAS ============
+  //CARGAR RESERVAS
   const loadReservas = async () => {
     try {
       setLoading(true);
 
       const params = {};
       if (filtros.sucursalId) params.sucursalId = filtros.sucursalId;
-      if (filtros.estado) params.estado = filtros.estado; // ya viene en MAYÚSCULAS
-      if (filtros.fecha) params.fecha = filtros.fecha; // YYYY-MM-DD
+      if (filtros.estado) params.estado = filtros.estado; 
+      if (filtros.fecha) params.fecha = filtros.fecha; 
 
       const res = await api.get("/reservas/admin", { params });
 
@@ -61,7 +60,6 @@ export default function SuperAdminReservas() {
     }
   };
 
-  // Inicial
   useEffect(() => {
     loadSucursales();
     loadReservas();

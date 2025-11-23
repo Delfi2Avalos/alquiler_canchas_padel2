@@ -1,7 +1,7 @@
 .navbar-container {
   width: 100%;
   padding: 15px 40px;
-  background-color: #073b3a; /* VERDE OSCURO */
+  background-color: #073b3a; 
   color: white;
   display: flex;
   justify-content: space-between;

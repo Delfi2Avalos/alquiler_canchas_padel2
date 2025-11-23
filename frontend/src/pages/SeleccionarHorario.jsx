@@ -13,7 +13,7 @@ export default function SeleccionarHorario({ idCancha, fecha, precioHora }) {
     const cargarHorarios = async () => {
       try {
         const res = await getHorariosDisponibles(idCancha, fecha);
-        setHorarios(res); // el backend ya devuelve lista
+        setHorarios(res); 
       } catch (err) {
         console.error("Error cargando horarios", err);
       }

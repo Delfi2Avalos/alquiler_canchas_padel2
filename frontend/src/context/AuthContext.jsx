@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("user");
     }
 
-    setLoading(false); // 👈 IMPORTANTE
+    setLoading(false); 
   }, []);
 
   const login = (userData) => {

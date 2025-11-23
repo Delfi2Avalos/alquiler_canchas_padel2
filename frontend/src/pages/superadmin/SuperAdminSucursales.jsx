@@ -7,11 +7,10 @@ export default function SuperAdminSucursales() {
   const [sucursales, setSucursales] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Modal control
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
-  // Formulario de creación / edición
+  //Formulario de creación/edición
   const emptyForm = {
     nombre: "",
     email: "",
@@ -26,7 +25,6 @@ export default function SuperAdminSucursales() {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
 
-  // Helper para fetch con token
   const authFetch = async (url, options = {}) => {
     const token = localStorage.getItem("token");
     const headers = {
@@ -46,7 +44,7 @@ export default function SuperAdminSucursales() {
     return res;
   };
 
-  // Cargar sucursales (lista admin)
+  //Cargar sucursales (lista admin)
   const loadSucursales = async () => {
     try {
       setLoading(true);
@@ -61,7 +59,7 @@ export default function SuperAdminSucursales() {
       }
 
       const data = await res.json();
-      // listarSucursalesAdmin devuelve directamente un array (rows)
+      //listarSucursalesAdmin devuelve directamente un array (rows)
       setSucursales(Array.isArray(data) ? data : data.data || []);
     } catch (e) {
       console.error("Error al cargar sucursales (admin):", e);
@@ -75,7 +73,7 @@ export default function SuperAdminSucursales() {
     loadSucursales();
   }, []);
 
-  // Crear Sucursal
+  //Crear Sucursal
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
@@ -100,7 +98,7 @@ export default function SuperAdminSucursales() {
     }
   };
 
-  // Abrir modal de edición
+  //Abrir modal de edición
   const openEditModal = (s) => {
     setEditId(s.id_sucursal);
     setForm({
@@ -116,7 +114,7 @@ export default function SuperAdminSucursales() {
     setShowEditModal(true);
   };
 
-  // Guardar edición
+  //Guardar edición
   const handleEdit = async (e) => {
     e.preventDefault();
     try {
@@ -142,7 +140,7 @@ export default function SuperAdminSucursales() {
     }
   };
 
-  // Eliminar sucursal
+  //Eliminar sucursal
   const deleteSucursal = async (id) => {
     if (!confirm("¿Eliminar sucursal? Esta acción no se puede deshacer.")) return;
 

@@ -26,7 +26,6 @@ export default function ConfirmacionReserva() {
   const enviarSolicitud = async () => {
     try {
 
-      // FORMATO ISO QUE EL BACKEND EXIGE
       const inicio = `${fecha}T${horaInicio}`;
       const fin = `${fecha}T${horaFin}`;
 
@@ -41,7 +40,7 @@ export default function ConfirmacionReserva() {
         id_cancha: canchaId,
         inicio,
         fin,
-        precio_total: 0  // YA NO USÁS PAGO → LO MANDO EN 0
+        precio_total: 0  
       });
 
       alert("Solicitud enviada con éxito");

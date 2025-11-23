@@ -1,10 +1,7 @@
 import { pool } from "../config/db.js";
 
-/**
- * ======================================================
- * SUPERADMIN → TOTAL DE RESERVAS POR SUCURSAL
- * ======================================================
- */
+//SUPERADMIN: TOTAL DE RESERVAS POR SUCURSAL
+
 export async function reporteReservasPorSucursal(req, res) {
   try {
     const [rows] = await pool.query(
@@ -25,11 +22,8 @@ export async function reporteReservasPorSucursal(req, res) {
   }
 }
 
-/**
- * ======================================================
- * ADMIN → CANCHAS MÁS RESERVADAS EN SU SUCURSAL
- * ======================================================
- */
+
+ //ADMIN: CANCHAS MÁS RESERVADAS EN SU SUCURSAL
 export async function reporteCanchasMasReservadas(req, res) {
   try {
     const sucursalId = req.user?.sucursal;
@@ -57,11 +51,8 @@ export async function reporteCanchasMasReservadas(req, res) {
 }
 
 
-/**
- * ======================================================
- * ADMIN → HORARIOS MÁS USADOS
- * ======================================================
- */
+
+ //ADMIN: HORARIOS MÁS USADOS
 export async function reporteHorariosMasUsados(req, res) {
   try {
     const sucursalId = req.user?.sucursal;
@@ -84,11 +75,8 @@ export async function reporteHorariosMasUsados(req, res) {
   }
 }
 
-/**
- * ======================================================
- * ADMIN → HORARIOS CON MENOS USO (VACÍOS)
- * ======================================================
- */
+
+ //ADMIN: HORARIOS CON MENOS USO (VACÍOS)
 export async function reporteHorariosVacios(req, res) {
   try {
     const sucursalId = req.user?.sucursal;

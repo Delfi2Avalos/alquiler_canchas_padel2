@@ -1,11 +1,11 @@
-/* ============ CONTENEDOR GENERAL ============ */
+/*CONTENEDOR GENERAL*/
 .admin-dashboard {
   max-width: 900px;
   margin: 40px auto;
   padding: 20px;
 }
 
-/* ============ SECCIONES ============ */
+/*SECCIONES*/
 .admin-section {
   background: #ffffff;
   padding: 25px;
@@ -15,13 +15,12 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Hover lindo en PC */
 .admin-section:hover {
   transform: translateY(-3px);
   box-shadow: 0 0 20px rgba(0,0,0,0.12);
 }
 
-/* ============ TITULOS Y TEXTO ============ */
+/*TITULOS Y TEXTO*/
 .admin-section h2 {
   margin-top: 0;
   font-size: 24px;
@@ -34,7 +33,7 @@
   color: #444;
 }
 
-/* ============ BOTÓN ============ */
+/*BOTÓN*/
 .admin-btn {
   background: #04b881;
   border: none;
@@ -51,7 +50,7 @@
   background: #049a6f;
 }
 
-/* ============ RESPONSIVE ============ */
+/*RESPONSIVE*/
 @media (max-width: 768px) {
   .admin-dashboard {
     padding: 10px;

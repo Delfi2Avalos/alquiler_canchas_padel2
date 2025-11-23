@@ -11,7 +11,6 @@ export default function AdminReservasPanel() {
   const [filtroEstado, setFiltroEstado] = useState("PENDIENTE");
   const [filtroFecha, setFiltroFecha] = useState("");
 
-  // Estados permitidos en tu BD
   const estadosFiltro = ["PENDIENTE", "CONFIRMADA", "RECHAZADA"];
 
   const cargar = async () => {

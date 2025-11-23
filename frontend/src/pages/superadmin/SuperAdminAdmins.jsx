@@ -8,11 +8,9 @@ export default function SuperAdminAdmins() {
   const [sucursales, setSucursales] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // -------- Modal --------
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
-  // -------- Form --------
   const emptyForm = {
     nombre: "",
     username: "",
@@ -26,9 +24,7 @@ export default function SuperAdminAdmins() {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
 
-  // ============================
-  //   Cargar ADMINs
-  // ============================
+  //Cargar ADMINS
   const loadAdmins = async () => {
     const res = await fetch(`${baseUrl}/api/admins`);
     const data = await res.json();
@@ -41,9 +37,7 @@ export default function SuperAdminAdmins() {
     }
   };
 
-  // ============================
-  //   Cargar Sucursales
-  // ============================
+  //Cargar Sucursales
   const loadSucursales = async () => {
     const res = await fetch(`${baseUrl}/api/sucursales`);
     const data = await res.json();
@@ -81,9 +75,7 @@ export default function SuperAdminAdmins() {
     fetchAll();
   }, []);
 
-  // ============================
-  //   Crear ADMIN
-  // ============================
+  //Crear ADMIN
   const createAdmin = async (e) => {
     e.preventDefault();
 
@@ -115,14 +107,12 @@ export default function SuperAdminAdmins() {
     }
   };
 
-  // ============================
-  //   Abrir Modal Editar
-  // ============================
+  //Abrir Modal Editar
   const openEditModal = (admin) => {
     setEditId(admin.id_usuario);
     setForm({
       nombre: admin.nombre,
-      username: admin.username, // no editable en el modal
+      username: admin.username, 
       email: admin.email,
       telefono: admin.telefono || "",
       dni: admin.dni || "",
@@ -132,9 +122,7 @@ export default function SuperAdminAdmins() {
     setShowEditModal(true);
   };
 
-  // ============================
-  //   Guardar Edición
-  // ============================
+  //Guardar Edición
   const editAdmin = async (e) => {
     e.preventDefault();
 
@@ -167,9 +155,7 @@ export default function SuperAdminAdmins() {
     }
   };
 
-  // ============================
-  //   Eliminar
-  // ============================
+  //Eliminar
   const deleteAdmin = async (id) => {
     if (!confirm("¿Eliminar administrador?")) return;
 
@@ -183,9 +169,7 @@ export default function SuperAdminAdmins() {
     if (data.ok) loadAdmins();
   };
 
-  // ============================
-  //   UI
-  // ============================
+  //UI
   return (
     <div className="dashboard-container">
       <div className="dashboard-overlay" />

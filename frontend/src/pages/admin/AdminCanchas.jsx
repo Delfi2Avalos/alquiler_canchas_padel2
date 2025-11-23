@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import "../../styles/Dashboard.css";
-import api from "../../api"; // axios con baseURL + token
+import api from "../../api"; //axios con baseURL + token
 
 export default function AdminCanchas() {
   const [canchas, setCanchas] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Modals
+  //Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -23,9 +23,7 @@ export default function AdminCanchas() {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
 
-  // ===============================
-  //   CARGAR CANCHAS (MI SUCURSAL)
-  // ===============================
+  //CARGAR CANCHAS (MI SUCURSAL)
   const loadCanchas = async () => {
     try {
       setLoading(true);
@@ -45,9 +43,7 @@ export default function AdminCanchas() {
     loadCanchas();
   }, []);
 
-  // ===============================
-  //   CREAR CANCHA
-  // ===============================
+  //CREAR CANCHA
   const handleCreate = async (e) => {
     e.preventDefault();
 
@@ -74,9 +70,7 @@ export default function AdminCanchas() {
     }
   };
 
-  // ===============================
-  //   EDITAR CANCHA
-  // ===============================
+  //EDITAR CANCHA
   const openEditModal = (c) => {
     setEditId(c.id_cancha);
     setForm({
@@ -118,9 +112,7 @@ export default function AdminCanchas() {
     }
   };
 
-  // ===============================
-  //   ELIMINAR CANCHA
-  // ===============================
+  //ELIMINAR CANCHA
   const deleteCancha = async (id) => {
     if (!confirm("¿Eliminar esta cancha?")) return;
 
@@ -137,9 +129,7 @@ export default function AdminCanchas() {
     }
   };
 
-  // ===============================
-  //   UI
-  // ===============================
+  //UI
   return (
     <div className="dashboard-container">
       <div className="dashboard-overlay" />

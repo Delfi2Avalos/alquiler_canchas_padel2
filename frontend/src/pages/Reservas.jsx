@@ -10,7 +10,6 @@ export default function Reservas() {
     try {
       const data = await getReservas();
 
-      //  Asegurar SIEMPRE un array
       setReservas(Array.isArray(data) ? data : []);
     } catch (err) {
       const msg =
@@ -19,7 +18,7 @@ export default function Reservas() {
         "Error al cargar las reservas";
 
       setError(msg);
-      setReservas([]); // evitar crash
+      setReservas([]);
     }
   };
 

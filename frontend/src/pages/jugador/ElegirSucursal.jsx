@@ -13,7 +13,6 @@ export default function ElegirSucursal() {
       const res = await api.get("/sucursales");
       console.log("RESPUESTA /sucursales:", res.data);
 
-      // Detectar si ya viene como array o dentro de 'data'
       const data =
         Array.isArray(res.data) ? res.data :
         Array.isArray(res.data.data) ? res.data.data :

@@ -1,10 +1,9 @@
 import { pool } from "../config/db.js";
 import { ok, badRequest, serverError } from "../utils/http.js";
 
-/**
- * GET /api/notificaciones/mias
- * Trae las notificaciones del usuario logueado
- */
+
+ //ruta: GET /api/notificaciones/mias
+ //Trae las notificaciones del usuario logueado
 export const misNotificaciones = async (req, res) => {
   try {
     const id_usuario = req.user?.id;

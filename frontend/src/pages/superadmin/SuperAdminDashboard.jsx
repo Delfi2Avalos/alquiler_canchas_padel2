@@ -8,22 +8,21 @@ export default function SuperAdminDashboard() {
   const navigate = useNavigate();
   const { logout: authLogout } = useContext(AuthContext);
 
-  // Estadísticas tarjetas
   const [stats, setStats] = useState({
     sucursalesActivas: 0,
     adminsActivos: 0,
     reservasTotales: 0,
   });
 
-  // Últimas reservas
+  //Últimas reservas
   const [ultimasReservas, setUltimasReservas] = useState([]);
 
-  // Jugadores
+  //Jugadores
   const [jugadores, setJugadores] = useState([]);
   const [listaFiltrada, setListaFiltrada] = useState([]);
   const [busqueda, setBusqueda] = useState("");
 
-  // Modal edición jugador
+  //Modal edición jugador
   const [editJugador, setEditJugador] = useState(null);
   const [form, setForm] = useState({
     nombre: "",
@@ -36,7 +35,6 @@ export default function SuperAdminDashboard() {
 
   const [loading, setLoading] = useState(true);
 
-  // ---------- helpers ----------
   const formatearFecha = (iso) => {
     if (!iso) return "-";
     const [y, m, d] = iso.slice(0, 10).split("-");
@@ -65,7 +63,7 @@ export default function SuperAdminDashboard() {
     return [];
   };
 
-  // ---------- cargar datos ----------
+  //cargar datos
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -117,7 +115,7 @@ export default function SuperAdminDashboard() {
     fetchData();
   }, []);
 
-  // ---------- buscador ----------
+  //buscador
   const filtrarJugadores = (texto) => {
     setBusqueda(texto);
     const t = texto.toLowerCase();
@@ -133,13 +131,13 @@ export default function SuperAdminDashboard() {
     setListaFiltrada(filtrados);
   };
 
-  // ---------- logout ----------
+  //logout
   const handleLogout = () => {
     authLogout();
     navigate("/login");
   };
 
-  // ---------- editar jugador ----------
+  //editar jugador
   const abrirEditar = (j) => {
     setEditJugador(j);
     setForm({
@@ -185,7 +183,6 @@ export default function SuperAdminDashboard() {
     }
   };
 
-  // ---------- render ----------
   return (
     <div className="dashboard-container">
       <div className="dashboard-overlay" />
@@ -289,7 +286,7 @@ export default function SuperAdminDashboard() {
                 </button>
               </article>
 
-              {/* 🔥 Pagos removido completamente */}
+              {/*  Pagos removido completamente */}
                {/*
               <article className="dashboard-card">
                 <div className="dashboard-card-header">

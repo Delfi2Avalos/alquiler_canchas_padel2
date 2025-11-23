@@ -3,28 +3,26 @@ import { pool } from "../config/db.js";
 
 const router = Router();
 
-/**
- * GET /api/superadmin/stats
- * Devuelve estadísticas reales del sistema
- */
+//ruta: GET /api/superadmin/stats
+//Devuelve estadísticas reales del sistema
 router.get("/stats", async (req, res) => {
   try {
-    // 1) Total de sucursales
+    // Total de sucursales
     const [sucursales] = await pool.query(
       "SELECT COUNT(*) AS total FROM sucursal"
     );
 
-    // 2) Total de admins activos
+    // Total de admins activos
     const [admins] = await pool.query(
       "SELECT COUNT(*) AS total FROM usuario WHERE rol = 'ADMIN' AND activo = 1"
     );
 
-    // 3) Reservas creadas HOY
+    // Reservas creadas HOY
     const [reservasHoy] = await pool.query(
       "SELECT COUNT(*) AS total FROM reserva WHERE DATE(inicio) = CURDATE()"
     );
 
-    // 4) Ocupación general (reservas activas / canchas * 100)
+    // Ocupación general 
     const [totalCanchas] = await pool.query(
       "SELECT COUNT(*) AS total FROM cancha WHERE estado = 'ACTIVA'"
     );
@@ -41,7 +39,6 @@ router.get("/stats", async (req, res) => {
         ? Math.round((reservasActivas[0].total / totalCanchas[0].total) * 100)
         : 0;
 
-    // Respondemos al front EXACTAMENTE lo que necesita
     res.json({
       ok: true,
       sucursalesActivas: sucursales[0].total,

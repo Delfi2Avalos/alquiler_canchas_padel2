@@ -12,9 +12,8 @@ const isISODate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
 const isISODateTime = (s) =>
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(String(s || ""));
 
-/* ============================================================
-   GET /api/reservas/disponibilidad
-   ============================================================ */
+
+ //ruta: GET /api/reservas/disponibilidad
 export const disponibilidad = async (req, res) => {
   try {
     const canchaId = Number(req.query.canchaId);
@@ -38,9 +37,7 @@ export const disponibilidad = async (req, res) => {
   }
 };
 
-/* ============================================================
-   GET /api/reservas/horarios
-   ============================================================ */
+//ruta: GET /api/reservas/horarios
 export const horariosDisponibles = async (req, res) => {
   try {
     const canchaId = Number(req.query.canchaId);
@@ -81,10 +78,9 @@ export const horariosDisponibles = async (req, res) => {
   }
 };
 
-/* ============================================================
-   POST /api/reservas
-   crear reserva en estado PENDIENTE
-   ============================================================ */
+
+  //ruta: POST /api/reservas
+  //crear reserva en estado PENDIENTE
 export const crearReserva = async (req, res) => {
   const conn = await pool.getConnection();
   try {
@@ -182,10 +178,9 @@ export const crearReserva = async (req, res) => {
   }
 };
 
-/* ============================================================
-   PATCH /api/reservas/:id/estado
-   ADMIN confirma o rechaza → AGREGA NOTIFICACIÓN
-   ============================================================ */
+
+  //ruta: PATCH /api/reservas/:id/estado
+  //ADMIN confirma o rechaza reserva: AGREGA NOTIFICACIÓN
 export const cambiarEstado = async (req, res) => {
   try {
 
@@ -250,9 +245,8 @@ export const cambiarEstado = async (req, res) => {
   }
 };
 
-/* ============================================================
-   GET /api/reservas/mias
-   ============================================================ */
+
+  //ruta: GET /api/reservas/mias
 export const listarMisReservas = async (req, res) => {
   try {
     const uid = req.user?.id;
@@ -282,9 +276,8 @@ export const listarMisReservas = async (req, res) => {
   }
 };
 
-/* ============================================================
-   GET /api/reservas/sucursal  (ADMIN)
-   ============================================================ */
+
+  //ruta: GET /api/reservas/sucursal  (ADMIN)
 export const listarReservasDeMiSucursal = async (req, res) => {
   try {
     const rol = req.user?.role || req.user?.rol || null;
@@ -334,9 +327,8 @@ export const listarReservasDeMiSucursal = async (req, res) => {
   }
 };
 
-/* ============================================================
-   GET /api/reservas/admin  (SUPERADMIN)
-   ============================================================ */
+
+  //ruta: GET /api/reservas/admin  (SUPERADMIN)
 export const listarReservasGlobal = async (req, res) => {
   try {
     const rol = req.user?.role || req.user?.rol || null;
